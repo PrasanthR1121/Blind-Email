@@ -1,0 +1,62 @@
+{% extends 'admin.html' %}
+
+{% block content  %}
+<body>
+<section id="main-content" style="margin-left:30px;">
+    <section class="wrapper" align="center">
+        <div class="typo-agile" >
+        <h2 class="w3ls_head">USER DETAILS</h2>
+
+<div class="bs-docs-example" >
+
+               
+     <form method="POST">           
+    <table class="table table-striped" cellpadding="5" cellspacing="5" width="500px" >
+        <thead>    
+            <tr>
+                <td><b>ID</b></td>
+                <td><b>NAME</b></td>
+                <td><b>ADDRESS</b></td>
+                <td><b>DOB</b></td>
+                <td><b>GENDER</b></td>
+                <td><b>EMAIL</b></td>
+                <td><b>MOBILE</b></td>
+                <td><b>VERIFICATION</b></td>
+                
+                
+                
+
+            </tr>
+            </thead>
+            {% for d in data %}
+            
+            <tr>
+                <td>{{d.0}}</td>
+                <td>{{d.1}}</td>
+                <td>{{d.2}}</td>
+                <td>{{d.3}}</td>
+                <td>{{d.4}}</td>
+                <td>{{d.5}}</td>
+                <td>{{d.6}}</td>
+                <td><a href="/userview/?id={{d.0}}&status=approved">Approve</a>
+                    <a href="/userview/?id={{d.0}}&status=rejected">Reject</a>
+                </td>
+                
+
+            </tr>
+            
+            {% endfor %}
+
+
+
+        </table>
+        </form>
+        
+    </div>    
+    
+</div>
+</div>
+
+</section>
+</body>
+{% endblock %}  

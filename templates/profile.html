@@ -1,0 +1,78 @@
+{% extends 'base2.html' %}
+{% load static %}
+{% block msg %}
+{% for d in det %}
+                <li>
+                    <a href="/inbox/">
+                        <span class="photo"><img  src="{% static d.1}"></span>
+                                <span class="subject">
+                                <span class="from">{{d.0}}</span>
+                                
+                                </span>
+                            
+                    </a>
+				</li>
+				{% endfor %}
+{% endblock%}
+{% block feed %}
+{% for f in feed %}
+				<li>
+                    <a href="/feedback/">
+                        <div class="task-info clearfix">
+                            <div class="desc pull-left">
+                                <h5>{{f.0}}</h5>
+                                <p></p>
+                            </div>
+                                    <span class="notification-pie-chart pull-right" data-percent="45">
+                            <span class="percent"></span>
+                            </span>
+                        </div>
+                    </a>
+                </li>
+            	{% endfor %}    
+{% endblock%}
+{% block prof %}
+{% for d in data %}
+<img alt="" src="{% static d.7%}" style="width:50px;height:50px">
+<span class="username">{{d.1}}</span>
+{% endfor%}
+{% endblock %}
+
+{% block content  %}
+	<section class="wthree-row w3-about  py-5">
+		<div class="container py-md-4 mt-md-3">
+			<h3 class="heading-agileinfo">DETAILS <span></span></h3>
+    <body>
+        <table  cellpadding="5" cellspacing="5" width="700px" align="center">
+                <form method="POST">
+                        {% csrf_token %}
+            {% for d in data %}
+            
+            <tr><td>NAME</td>:<td>{{d.1}}</td></tr>
+            <tr><td>ADDRESS</td>:<td>{{d.2}}</td></tr>
+            <tr><td>DOB</td>:<td>{{d.3}}</td></tr>
+            <tr><td>GENDER</td>:<td>{{d.4}}</td></tr>
+            <tr><td>EMAIL</td>:<td>{{d.5}}</td></tr>
+            <tr><td>MOBILE</td>:<td>{{d.6}}</td></tr>
+
+            {% endfor %}
+        </table>
+      
+                <table class="table">
+                        <tr>
+                            <td></td>
+                            <td><input type="submit" name="edit" value="edit"></td>
+                        </tr>    
+                </table>
+        </form>  
+
+    </body>
+    </section>
+{% endblock %}        
+                
+                
+                
+                
+
+           
+            

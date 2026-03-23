@@ -1,0 +1,305 @@
+{% extends 'base2.html' %}
+{% block prof %}
+{% for d in data2 %}
+<img alt="" src=..{{d.7}} style="width:50px;height:50px">
+<span class="username">{{d.1}}</span>
+{% endfor%}
+{% endblock %}
+{% block content %}
+<!--main content start-->
+
+	<section class="wrapper">
+		<div class="mail-w3agile">
+        <!-- page start-->
+        <div class="row">
+
+            <div class="col-sm-3 com-w3ls">
+                <section class="panel">
+                    <div class="panel-body">
+                        <a href="/message/"  class="btn btn-compose">
+                            Compose Mail
+                        </a>
+
+                        <ul class="nav nav-pills nav-stacked mail-nav">
+                            <li class="active"><a href="/inbox/"> <i class="fa fa-inbox"></i> Inbox  <span class="label label-danger pull-right inbox-notification">9</span></a></li>
+                            <li><a href="/sent/"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
+                            
+                            <li><a href="/draft/"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-info pull-right inbox-notification">123</span></a></a></li>
+                            
+                        </ul>
+                    </div>
+                </section>
+
+               
+            </div>
+            <div class="col-sm-9 mail-w3agile">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                       <h4 class="gen-case">Result
+                            
+                        <form action="#" method="POST" class="pull-right mail-src-position">
+                                {% csrf_token %}
+                                   
+                            <div class="input-append">
+                                <input type="search" class="form-control " name="se">
+                                <input type="submit" class="form-control " style="visibility: hidden">
+                            </div>
+                        </form>
+                       </h4>
+                    </header>
+                    <div class="panel-body minimal">
+                        <div class="mail-option">
+                            <div class="chk-all">
+                                <div class="pull-left mail-checkbox ">
+                                    <input type="checkbox" class="">
+                                </div>
+
+                                <div class="btn-group">
+                                    <a data-toggle="dropdown" href="#" class="btn mini all">
+                                        All
+                                        <i class="fa fa-angle-down "></i>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#"> None</a></li>
+                                        <li><a href="#"> Read</a></li>
+                                        <li><a href="#"> Unread</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="btn-group">
+                                <a data-original-title="Refresh" data-placement="top" data-toggle="dropdown" href="#" class="btn mini tooltips">
+                                    <i class=" fa fa-refresh"></i>
+                                </a>
+                            </div>
+                            <div class="btn-group hidden-phone">
+                                <a data-toggle="dropdown" href="#" class="btn mini blue">
+                                    More
+                                    <i class="fa fa-angle-down "></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#"><i class="fa fa-pencil"></i> Mark as Read</a></li>
+                                    <li><a href="#"><i class="fa fa-ban"></i> Spam</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="#"><i class="fa fa-trash-o"></i> Delete</a></li>
+                                </ul>
+                            </div>
+                            <div class="btn-group">
+                                <a data-toggle="dropdown" href="#" class="btn mini blue">
+                                    Move to
+                                    <i class="fa fa-angle-down "></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#"><i class="fa fa-pencil"></i> Mark as Read</a></li>
+                                    <li><a href="#"><i class="fa fa-ban"></i> Spam</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="#"><i class="fa fa-trash-o"></i> Delete</a></li>
+                                </ul>
+                            </div>
+
+                            <ul class="unstyled inbox-pagination">
+                                <li><span>1-50 of 124</span></li>
+                                <li>
+                                    <a class="np-btn" href="#"><i class="fa fa-angle-left  pagination-left"></i></a>
+                                </li>
+                                <li>
+                                    <a class="np-btn" href="#"><i class="fa fa-angle-right pagination-right"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="table-inbox-wrap ">
+                            <table class="table table-inbox table-hover">
+                        <tbody>
+                        {% for d in data3 %}    
+                        <tr class="unread">
+                            <td class="inbox-small-cells">
+                                <input type="checkbox" class="mail-checkbox">
+                            </td>
+                            
+                            <td class="inbox-small-cells"><i class="fa fa-star"></i></td>
+                            <td class="view-message  dont-show"><a href="#">{{d.1}}</a></td>
+                           
+                            <td class="view-message "><a href="#">{{d.4}}</a></td>
+                            <td class="view-message  text-right">{{d.5}}</td>
+                            <td class="view-message "><a href="#">{{d.3}}</a></td>
+                            
+                           
+                        </tr>
+                        <script src="js/ie6-transparency.js"></script>
+                        <script src="http://responsivevoice.org/responsivevoice/responsivevoice.js"></script>
+                       <script src="../static/attainment/js/jquery-2.2.3.min.js"></script>
+                       <script src="js/jquery.tabify.js" type="text/javascript" charset="utf-8"></script>
+                        <script type="text/javascript">
+                            // Test browser support
+                            var flag_to = 0;
+                            var flag_sub = 0;
+                            var flag_content = 0;
+                            window.SpeechRecognition = window.SpeechRecognition ||
+                                                            window.webkitSpeechRecognition ||
+                                                            null;
+                                                            responsiveVoice.speak("you have {{data1}} messages");                                                  
+                            if (window.SpeechRecognition === null) {
+                               
+                            } else {
+                                var recognizer = new window.SpeechRecognition();
+                                var transcription = document.getElementById('myContent');
+                                var txt_to = document.getElementById('txt_to');
+                                var txt_sub = document.getElementById('txt_sub');
+                                //var log = document.getElementById('log');
+                        
+                                // Recogniser doesn't stop listening even if the user pauses
+                                recognizer.continuous = true;
+                                // Start recognising
+                                recognizer.onresult = function (event) {
+                                    //transcription.textContent = '';
+                                    debugger;
+                                    var c = '<% Response.Write(count); %>';
+                                    var count = Number(c);
+                                    var n = '<% Response.Write(num); %>';
+                                    var num = Number(n);
+                                   
+                                    for (var i = event.resultIndex; i < event.results.length; i++) {
+                                        var flag_val = $.trim(event.results[i][0].transcript);
+                                        alert(flag_val);
+                                        if (flag_val == "Next" || flag_val == "next") {
+                                            // recognizer.stop();
+                                            if (num <= count) {
+                                                window.location.href = "Blind_Email.aspx?crnt_page=" + nextpage;
+                                            }
+                                            else {
+                                                responsiveVoice.speak('  Cannot go further  ');
+                        
+                        
+                                            }
+                                        }
+                                        else if (flag_val == "Previous" || flag_val == "previous") {
+                                            //recognizer.stop();
+                                            if (num > 0) {
+                                                window.location.href = "Blind_Email.aspx?crnt_page=" + prepage;
+                                            }
+                                        }
+                                        else if (flag_val == "Home" || flag_val == "home") {
+                                            //recognizer.stop();
+                                            window.location.href = "/userhome/";
+                                        }
+                                        else if (flag_val == "COMPOSE" || flag_val == "compose") {
+                                            //recognizer.stop();
+                                            window.location.href = "/message/";
+                                        }
+                                        else if (flag_val == "FEEDBACK" || flag_val == "feedback") {
+                                            //recognizer.stop();
+                                            window.location.href = "/feedback/";
+                                        }
+					                    else if (flag_val == "LOGOUT" || flag_val == "logout") {
+						                    //recognizer.stop();
+						                    window.location.href = "/login/";    
+                                        }
+                                        else if (flag_val == "One" || flag_val == "one" || flag_val == "1") {
+                                            //recognizer.stop();
+                                            window.location.href = "/compose/?count={{d.4}}";
+                                        }
+                                        else if (flag_val == "Two" || flag_val == "two" || flag_val == "2" || flag_val == "RTU" || flag_val == "to" || flag_val == "rtu" || flag_val == "tu") {
+                                            //recognizer.stop();
+                                            count = count-1;
+                                            if (count > 0) {
+                                                var url = "/compose/?count={{d.0}}";
+                                                window.location.href = url;
+                                            }
+                                            else {
+                                                responsiveVoice.speak('No Mail Found');
+                                            }
+                                        }
+                                        else if (flag_val == "Three" || flag_val == "thee" || flag_val == "3" || flag_val == "to" || flag_val == "thu" || flag_val == "too") {
+                                            //recognizer.stop();
+                                            count = count - 2;
+                                            if (count > 0) {
+                                                var url = "/compose/?count={{d.0}}";
+                                                window.location.href = url;
+                                            }
+                                            else {
+                                                responsiveVoice.speak('  No Mail Found  ');
+                                            }
+                                        }
+                                        else if (flag_val == "Four" || flag_val == "4" || flag_val == "for" || flag_val == "to" || flag_val == "thu" || flag_val == "too") {
+                                            // recognizer.stop();
+                                            count = count - 3;
+                                            if (count > 0) {
+                                                window.location.href = "/compose/?count=" + count;
+                                            }
+                                            else {
+                                                responsiveVoice.speak('  No Mail Found  ');
+                                            }
+                                        }
+                                        else if (flag_val == "five" || flag_val == "5" || flag_val == "fiv" || flag_val == "to" || flag_val == "thu" || flag_val == "too") {
+                                            count = count - 4;
+                                            if (count > 0) {
+                                                window.location.href = "/compose/?count=" + count;
+                                            }
+                                            else {
+                                                responsiveVoice.speak('No Mail Found');
+                                            }
+                                        }
+                                        else if (flag_val == "Logout" || flag_val == "logout" || flag_val == "logout") {
+                                            responsiveVoice.speak("  Please wait a moment  ");
+                                            window.location.href = "Inbox.aspx";
+                                        }
+                                    }
+                                };
+                                // Listen for errors
+                                recognizer.onerror = function (event) {
+                                    // log.innerHTML = 'Recognition error: ' + event.message + '<br />' + log.innerHTML;
+                                };
+                        
+                               // document.getElementById('button-play-ws').addEventListener('click', function () {
+                                    // Set if we need interim results
+                                    recognizer.interimResults = false;
+                                    try {
+                                        recognizer.start();
+                                        // log.innerHTML = 'Recognition started' + '<br />' + log.innerHTML;
+                                    } catch (ex) {
+                                        //log.innerHTML = 'Recognition error: ' + ex.message + '<br />' + log.innerHTML;
+                                    }
+                               // });
+                        //        document.getElementById('button-stop-ws').addEventListener('click', function () {
+                        //            recognizer.stop();
+                        //            //log.innerHTML = 'Recognition stopped' + '<br />' + log.innerHTML;
+                        //        });
+                        //        document.getElementById('clear-all').addEventListener('click', function () {
+                        //            transcription.textContent = '';
+                        //            //log.textContent = '';
+                        //        });
+                            }
+                            function send_btn_onclick() {
+                        
+                            }
+                        
+                            </script>
+                            </body>
+                        </section>
+                        {% endfor %}
+                        </tbody>
+                        </table>
+
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- page end-->
+        </div>
+</section>
+{% endblock %}
+ 
+</section>
+<!--main content end-->
+</section>
+<script src="../static/webnew/js/bootstrap.js"></script>
+<script src="../static/webnew/js/jquery.dcjqaccordion.2.7.js"></script>
+<script src="../static/webnew/js/scripts.js"></script>
+<script src="../static/webnew/js/jquery.slimscroll.js"></script>
+<script src="../static/webnew/js/jquery.nicescroll.js"></script>
+<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../static/webnew/js/flot-chart/excanvas.min.js"></script><![endif]-->
+<script src="../static/webnew/js/jquery.scrollTo.js"></script>
+</body>
+</html>

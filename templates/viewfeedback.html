@@ -1,0 +1,51 @@
+{% extends 'admin.html' %}
+
+{% block content  %}
+<body>
+<section id="main-content" style="margin-left:30px;>
+        <section class="wrapper" align="center">
+            <div class="typo-agile" >
+            <h2 class="w3ls_head">FEEDBACK</h2>
+    
+    <div class="bs-docs-example" >
+    
+                   
+                    
+        <table class="table table-striped" cellpadding="5" cellspacing="5" width="500px" >
+            <thead>
+            <tr>
+                <td><b>ID</b></td>
+                <td><b>FROM</b></td>
+                <td><b>DATE</b></td>
+                <td><b>SUBJECT</b></td>
+                <td><b>FEEDBACK</b></td>
+                
+                
+                
+
+            </tr>
+        </thead>
+            {% for d in data %}
+            <tr>
+                <td>{{d.0}}</td>
+                <td>{{d.1}}</td>
+                <td>{{d.3}}</td>
+                <td>{{d.4}}</td>
+                <td>{{d.5}}</td>
+        
+
+            </tr>
+            {% endfor %}
+
+
+
+        </table>
+        
+    </div>    
+    
+</div>
+</div>
+
+</section>
+</body>
+{% endblock %}  

@@ -1,0 +1,251 @@
+{% extends 'base2.html' %}
+{% load static %}
+{% block prof %}
+{% for d in data %}
+<img alt="" src="{% static d.7 %}" style="width:50px;height:50px">
+<span class="username">{{d.1}}</span>
+{% endfor%}
+{% endblock %}
+
+{% block content  %}
+	<!-- courses -->
+	<section class="wthree-row w3-about  py-5">
+		<div class="container py-md-4 mt-md-3">
+			
+        <form method="POST">
+        <link href='http://fonts.googleapis.com/css?family=Belgrano' rel='stylesheet' type='text/css'>
+<!-- jQuery file -->
+<script src="js/jquery.min.js"></script>
+     <script src="http://responsivevoice.org/responsivevoice/responsivevoice.js"></script>
+            {% csrf_token %}
+      
+            
+            <div class="col-sm-9 mail-w3agile">
+                    <section class="panel">
+                        <header class="panel-heading wht-bg">
+                           <h4 class="gen-case"> Compose Mail
+                               <form action="#" class="pull-right mail-src-position">
+                                <div class="input-append">
+                                    
+                                </div>
+                            </form>
+                           </h4>
+                        </header>
+                        <div class="panel-body">
+                            
+                            <div class="compose-mail">
+                                <form role="form-horizontal" method="post">
+                                        {% csrf_token %}
+                                        {% for d in data %}
+                                    <div class="form-group">
+                                        <label for="to" class="">To:</label>
+                                        <input type="text" tabindex="1" name="sendto" value="{{frm1}}" id="txt_to" class="form-control">
+    
+                                        
+                                    </div>
+    
+                                   
+    
+                                    <div class="form-group">
+                                        <label for="subject" class="">Subject:</label>
+                                        <input type="text" tabindex="1" id="txt_sub" name="subject" class="form-control">
+                                    </div>
+    
+                                    <div class="compose-editor">
+                                        <textarea class="wysihtml5 form-control" name="content" id="myContent" rows="9"></textarea>
+                                        
+                                    </div>
+                                    <div class="compose-btn">
+                                        <button class="btn btn-primary btn-sm" onclick="disp()" name="send"><i class="fa fa-check" id="bb"  ></i> Send</button>
+                                        
+                                        <button class="btn btn-sm "onclick="disp1()" name="draft">Draft</button>
+                                    </div>
+                                    {% endfor %}
+                                </form>
+                                <script>
+                                function disp()
+                                {
+                                    
+                                    alert("messege send succesfully");
+                                }
+                                function disp1()
+                                {
+                                    
+                                    alert("messege drafted succesfully");
+                                }
+                                </script>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                
+    
+               
+           
+            
+            
+            
+            <script type="text/javascript">
+     // Test browser support
+     debugger;
+     var flag_to = 0;
+     var flag_sub = 0;
+     var flag_content =0;
+     window.SpeechRecognition = window.SpeechRecognition ||
+                                    window.webkitSpeechRecognition ||
+                                    null;
+     if (window.SpeechRecognition === null) {
+         document.getElementById('ws-unsupported').classList.remove('hidden');
+         document.getElementById('button-play-ws').setAttribute('disabled', 'disabled');
+         document.getElementById('button-stop-ws').setAttribute('disabled', 'disabled');
+     } else {
+         var recognizer = new window.SpeechRecognition();
+         var transcription = document.getElementById('myContent');
+         var txt_to = document.getElementById('txt_to');
+         var txt_sub = document.getElementById('txt_sub');
+         //var log = document.getElementById('log');
+
+         // Recogniser doesn't stop listening even if the user pauses
+         recognizer.continuous = true;
+         // Start recognising
+         recognizer.onresult = function (event) {
+             //transcription.textContent = '';
+             debugger;
+
+             for (var i = event.resultIndex; i < event.results.length; i++) {
+                 var flag_val = $.trim(event.results[i][0].transcript);
+                 if (flag_val == "Send" || flag_val == "send" || flag_val == "Sent" || flag_val=="sent") {
+                     var msg = $('#myContent').val();
+                     var to = $('#txt_to').val();
+                     var sub = $('#txt_sub').val();
+                     responsiveVoice.speak('Message Send Successfully');
+                     window.location.href = "/message/?msg='" + msg + "'&to='"+to+"'&sub='"+sub+"'";
+                 }
+                 if (flag_val == "Save" || flag_val == "save" || flag_val == "save" || flag_val=="Save") {
+                     var msg = $('#myContent').val();
+                     var to = $('#txt_to').val();
+                     var sub = $('#txt_sub').val();
+                     responsiveVoice.speak('Message drafted Successfully');
+                     window.location.href = "/save/?msg='" + msg + "'&to='"+to+"'&sub='"+sub+"'";
+                 }
+                 if (flag_val == "To" || flag_val == "to" || flag_val == 2 || flag_val == "RTU" || flag_val == "destination" || flag_val == "Destination") {
+                     flag_to = 1;
+                     flag_sub = 0;
+                     flag_content = 0;
+                     responsiveVoice.speak('Please say destination');
+                 }
+                 else if (flag_val == "Subject" || flag_val == "subject") {
+                     flag_sub = 1;
+                     flag_to = 0;
+                     flag_content = 0;
+                     responsiveVoice.speak('Please say subject');
+                 }
+                 else if (flag_val == "Body" || flag_val == "body") {
+                     flag_content = 1;
+                     flag_to = 0;
+                     flag_sub = 0;
+                     responsiveVoice.speak('Please say mail body');
+                 }
+                 else if (flag_val == "read body" || flag_val == "body") {
+                     var ss = $('#myContent').val();
+                     responsiveVoice.speak(ss);
+                 }
+                 else if (flag_val == "read destination" || flag_val == "body") {
+                     var ss = $('#txt_to').val();
+                     responsiveVoice.speak(ss);
+                 }
+                 else if (flag_val == "read subject" || flag_val == "body") {
+                     var ss = $('#txt_sub').val();
+                     responsiveVoice.speak(ss);
+                 }
+                 else if (flag_val == "Inbox" || flag_val == "inbox") {
+                     window.location.href = "/inbox/";
+                 }
+                 else if (flag_val == "Cleare" || flag_val == "cleare" || flag_val == "clear" || flag_val == "clear all") {
+                     $('#txt_to').val('');
+                     $('#txt_sub').val('');
+                     $('#myContent').val('');
+                 }
+                 else if (flag_val == "Cleare to" || flag_val == "cleare 2" || flag_val == "clear to" || flag_val == "clear destination") {
+                     $('#txt_to').val('');                    
+                 }
+                 else if (flag_val == "Cleare subject" || flag_val == "clear subject" || flag_val == "clear" || flag_val == "clear all") {
+                     $('#txt_sub').val('');
+                 }
+                 else if (flag_val == "Cleare body" || flag_val == "clear body" || flag_val == "clear" || flag_val == "clear all") {
+                     $('#myContent').val('');
+                 }
+                 else if (flag_val == "Logout" || flag_val == "logout" || flag_val == "logout") {
+                     responsiveVoice.speak("Plase wait a moment");
+                     window.location.href = "Inbox.aspx";
+                 }
+                 else {
+                     if (flag_to == 1) {
+                         if (event.results[i].isFinal) {
+                             $('#txt_to').val($('#txt_to').val() + ' ' + event.results[i][0].transcript);
+                         } else {
+                             $('#txt_to').val($('#txt_to').val() + ' ' + event.results[i][0].transcript);
+                         }
+                     }
+                     else if (flag_sub == 1) {
+                         if (event.results[i].isFinal) {
+                             // $('#txt_sub').val() += event.results[i][0].transcript;
+                             $('#txt_sub').val($('#txt_sub').val() + ' ' + event.results[i][0].transcript);
+                         } else {
+                             $('#txt_sub').val($('#txt_sub').val() + ' ' + event.results[i][0].transcript);
+                         }
+                     }
+                     else {
+                         if (event.results[i].isFinal) {
+                             transcription.textContent += event.results[i][0].transcript;
+                         } else {
+                             transcription.textContent += event.results[i][0].transcript;
+                         }
+                     }
+
+                     
+                 }
+             }
+         };
+         // Listen for errors
+         recognizer.onerror = function (event) {
+             // log.innerHTML = 'Recognition error: ' + event.message + '<br />' + log.innerHTML;
+         };
+
+        // document.getElementById('button-play-ws').addEventListener('click', function () {
+             // Set if we need interim results
+             recognizer.interimResults = false;
+             try {
+                 recognizer.start();
+                 // log.innerHTML = 'Recognition started' + '<br />' + log.innerHTML;
+             } catch (ex) {
+                 //log.innerHTML = 'Recognition error: ' + ex.message + '<br />' + log.innerHTML;
+             }
+         //});
+         document.getElementById('button-stop-ws').addEventListener('click', function () {
+             recognizer.stop();
+             //log.innerHTML = 'Recognition stopped' + '<br />' + log.innerHTML;
+         });
+         document.getElementById('clear-all').addEventListener('click', function () {
+             transcription.textContent = '';
+             //log.textContent = '';
+         });
+     }
+     function send_btn_onclick() {
+
+     }
+
+    </script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript">
+    $('#compose_btn').click(function () {
+        var msg = $('#myContent').val();
+        window.location.href = "compose.aspx?msg='" + msg + "'";
+    });
+
+    function compose_btn_onclick() {
+
+    }
+    </script>
+    
+    {% endblock %}      

@@ -1,0 +1,87 @@
+{% extends 'base2.html' %}
+{% block msg %}
+{% for d in det %}
+                <li>
+                    <a href="/inbox/">
+                        <span class="photo"><img  src="..{{d.1}}"></span>
+                                <span class="subject">
+                                <span class="from">{{d.0}}</span>
+                                
+                                </span>
+                            
+                    </a>
+				</li>
+				{% endfor %}
+{% endblock%}
+{% block feed %}
+{% for f in feed %}
+				<li>
+                    <a href="/feedback/">
+                        <div class="task-info clearfix">
+                            <div class="desc pull-left">
+                                <h5>{{f.0}}</h5>
+                                <p></p>
+                            </div>
+                                    <span class="notification-pie-chart pull-right" data-percent="45">
+                            <span class="percent"></span>
+                            </span>
+                        </div>
+                    </a>
+                </li>
+            	{% endfor %}    
+{% endblock%}
+{% block prof %}
+{% for d in data %}
+<img alt="" src=..{{d.7}} style="width:50px;height:50px">
+<span class="username">{{d.1}}</span>
+{% endfor%}
+{% endblock %}
+
+{% block content  %}
+	<section class="wthree-row w3-about  py-5">
+		<div class="container py-md-4 mt-md-3">
+			<h3 class="heading-agileinfo">DETAILS <span></span></h3>
+    <body>
+
+        <table  cellpadding="5" cellspacing="5" width="700px" align="center">
+                <form method="POST">
+                        {% csrf_token %}
+            {% for d in data %}
+            
+            
+            
+            <tr><td>NAME</td>:<td><input type="text" name="name" value="{{d.1}}"></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td>ADDRESS</td>:<td><input type="text" name="address" value="{{d.2}}"></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td>DOB</td>:<td><input type="date" name="dob" value="{{d.3}}"></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td>GENDER</td>:<td><input type="text" name="gender" value="{{d.4}}" disabled></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td>EMAIL</td>:<td><input type="text" name="email" value="{{d.5}}"></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td>MOBILE</td>:<td><input type="text" name="mobile" value="{{d.6}}"></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            {% endfor %}
+        </table>
+      
+              
+                <table class="table">
+                        <tr>
+                            <td></td>
+                            <td><input type="submit" name="submit" value="submit"></td>
+                        </tr>
+                    </form>    
+                </table>
+         
+
+    </body>
+    </section>
+{% endblock %}        
+                
+                
+                
+                
+
+           
+            

@@ -1,0 +1,98 @@
+{% extends 'base2.html' %}
+{% load static %}
+{% block prof %}
+{% for d in data2 %}
+<img alt="" src="{% static d.1%}" style="width:50px;height:50px">
+<span class="username">{{d.1}}</span>
+{% endfor%}
+{% endblock %}
+{% block content %}
+<!--main content start-->
+
+	<section class="wrapper">
+		<div class="mail-w3agile">
+        <!-- page start-->
+        <div class="row">
+
+            <div class="col-sm-3 com-w3ls">
+                <section class="panel">
+                    <div class="panel-body">
+                        <a href="/message/"  class="btn btn-compose">
+                            Compose Mail
+                        </a>
+                        <ul class="nav nav-pills nav-stacked mail-nav">
+                            <li class="active"><a href="/inbox/"> <i class="fa fa-inbox"></i> Inbox  <span class="label label-danger pull-right inbox-notification">9</span></a></li>
+                            <li><a href="/sent/"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
+                            
+                            <li><a href="/draft/"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-info pull-right inbox-notification">123</span></a></a></li>
+                        
+                        </ul>
+                    </div>
+                </section>
+
+               
+            </div>
+            <div class="col-sm-9 mail-w3agile">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                       <h4 class="gen-case">Drafts
+                        <form action="#" class="pull-right mail-src-position">
+                            <div class="input-append">
+                                
+                            </div>
+                        </form>
+                       </h4>
+                    </header>
+                    <div class="panel-body minimal">
+                        <div class="mail-option">
+                            
+       
+		
+        <form method="POST">
+                <form method="POST">
+                        <link href='http://fonts.googleapis.com/css?family=Belgrano' rel='stylesheet' type='text/css'>
+                <!-- jQuery file -->
+                <script src="js/jquery.min.js"></script>
+                     <script src="http://responsivevoice.org/responsivevoice/responsivevoice.js"></script>
+            {% csrf_token %}
+            <table class="table">
+                
+                <tr>
+                    <td>Sendto:</td>
+                    <td><input type="text" id="sendto" class="form-control" name="sendto" value="{{frm1}}"></td>
+                </tr>
+                <tr>
+                    <td>subject:</td>
+                    <td><input type="text" id="subject" class="form-control" name="subject" value="{{sub}}"></td>
+                </tr>
+                <tr>
+                    <td>content:</td>
+                    <td><textarea rows="9" cols="22" id="content" class="form-control" name="content" value="{{con}}">{{con}}</textarea></td>
+                    </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="submit" class="btn btn-primary btn-sm" name="send" value="Send">
+                </tr>
+            </table>
+        </div>
+    </section>
+</div>
+</div>
+
+<!-- page end-->
+</div>
+</section>
+{% endblock %}
+
+</section>
+<!--main content end-->
+</section>
+<script src="../static/webnew/js/bootstrap.js"></script>
+<script src="../static/webnew/js/jquery.dcjqaccordion.2.7.js"></script>
+<script src="../static/webnew/js/scripts.js"></script>
+<script src="../static/webnew/js/jquery.slimscroll.js"></script>
+<script src="../static/webnew/js/jquery.nicescroll.js"></script>
+<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../static/webnew/js/flot-chart/excanvas.min.js"></script><![endif]-->
+<script src="../static/webnew/js/jquery.scrollTo.js"></script>
+</body>
+</html>
