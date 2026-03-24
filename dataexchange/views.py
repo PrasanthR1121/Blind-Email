@@ -1,3 +1,4 @@
+from django import db
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
 import MySQLdb 
@@ -5,10 +6,18 @@ import datetime
 import subprocess
 from django.core.files.storage import FileSystemStorage
 import os
-db=MySQLdb.connect("localhost","root","","dataexchange")
-c=db.cursor()
+
+def get_db():
+    return MySQLdb.connect(
+        host="localhost",
+        user="root",
+        passwd="",
+        db="dataexchange"
+    )
+
 def login(request):
- 
+    db = get_db()
+    c = db.cursor()
     error=""
     request.session['username']=""
     password=""
@@ -19,20 +28,12 @@ def login(request):
         if((username=='admin@gmail.com') and (password=='admin')):
              return HttpResponseRedirect("/userview/")
         else:
-            
             c.execute("select count('"+ username +"') from registration where email_id='"+ username +"' and password='"+password+"'" )
             data=c.fetchone()
             if data[0]==1:
                 c.execute("select status from registration where email_id='"+username+"' ")
                 data1=c.fetchone() 
-                #if data1:         
-                if (data[0]==1 and data1[0]=="approved"):                
-                        # subprocess.call("E:\\windapp\\windapp\\bin\\Debug\\windapp.exe")  
-                        # f=open("E:\\face.txt","r")
-                        # data=f.read()
-                        # z=len(data)
-                        # f.close() 
-                        # if(data[0:z-1]==username):
+                if (data[0]==1 and data1[0]=="approved"):      
                         return HttpResponseRedirect("/userhome/")            
                 else:
                         if(data1[0]=="rejected"):
@@ -41,12 +42,8 @@ def login(request):
                             error="enter valid email"   
             else:
                     return HttpResponseRedirect("/login/") 
-                        
-
-            #db.commit()
-            
-            
     return render(request,"login.html",{"error":error})
+
 def adminlogin(request):
     error=""
     request.session['username']=""
@@ -58,8 +55,11 @@ def adminlogin(request):
             return HttpResponseRedirect("/adminhome/")
         else:
             error="enter valid email"     
-    return render(request,"adminlogin.html",{"error":error})         
+    return render(request,"adminlogin.html",{"error":error})
+         
 def forgot(request):
+    db = get_db()
+    c = db.cursor()
     error=""
     if(request.POST):
         username=request.POST.get("uname")
@@ -75,6 +75,8 @@ def forgot(request):
     return render(request,"forgot.html",{"error":error})   
 
 def security(request):
+    db = get_db()
+    c = db.cursor()
     error=""
     if(request.POST):
         answer=request.POST.get("answer")
@@ -88,6 +90,8 @@ def security(request):
     return render(request,"security.html",{"error":error}) 
 
 def newpass(request):
+    db = get_db()
+    c = db.cursor()
     error=""
     unam=request.session['username']
     if(request.POST):
@@ -103,12 +107,13 @@ def newpass(request):
 
 
 def reg(request):
+    db = get_db()
+    c = db.cursor()
     error=""
     msg=""
     err=""
     msg1=""
     if(request.POST):
-        # subprocess.call('E:\\windapp\\windapp\\bin\\Debug\\windapp.exe') 
         name=request.POST.get("name")
         address=request.POST.get("address")
         dob=request.POST.get("dob")
@@ -138,17 +143,15 @@ def reg(request):
                     msg="wait for admin to approve"
                 else:
                     msg1="existing mobile number"
-
-
-            
             else:
                 error="USERNAME ALREDY EXISTED"
         else:
-            err="password and confirm password donot match"
-        
+            err="password and confirm password donot match"        
     return render(request,"reg.html",{"error":error,"msg":msg,"err":err,"msg1":msg1})    
 
 def save(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         unam=request.session['username']
         c.execute("select * from registration where email_id='"+unam+"'")
@@ -163,7 +166,6 @@ def save(request):
             status="draft"
             unam=request.session['username']
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+ str(unam) +"',"+ str(sendto) +",'"+ str(date)+"',"+ str(subject) +","+ str(content) +",'"+ str(status) +"')"
-        # c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
     else:
@@ -172,6 +174,8 @@ def save(request):
     return render(request,"message.html",{"data":s,"msg":request.POST.get("content"),"data2":data2})        
        
 def message(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         unam=request.session['username']
@@ -195,7 +199,6 @@ def message(request):
             status="sent"
             unam=request.session['username']
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+ str(unam) +"',"+ str(sendto) +",'"+ str(date)+"',"+ str(subject) +","+ str(content) +",'"+ str(status) +"')"
-        # c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
 
@@ -211,7 +214,6 @@ def message(request):
             unam=request.session['username']
             status="sent"
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            #c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
 
@@ -227,14 +229,16 @@ def message(request):
             unam=request.session['username']
             status="Draft"
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            #c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
     else:
         return HttpResponseRedirect("/login/")
             
     return render(request,"message.html",{"data":s,"msg":request.POST.get("content"),"data2":data2,"det":det,"feed":feed})
+
 def compose(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         unam=request.session['username']
         c.execute("select * from registration where email_id='"+unam+"'")
@@ -253,7 +257,10 @@ def compose(request):
     else:
         return HttpResponseRedirect("/login/")           
     return render(request,"compose.html",{"frm1":frm1,"sub":sub,"con":con,"s":s,"data2":data2})
+
 def draft1(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         s1="sent"
@@ -266,8 +273,6 @@ def draft1(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-        
-  
         c.execute("select * from registration where email_id='"+unam+"'")
         data2=c.fetchall()
         frm=request.GET.get("count")
@@ -287,8 +292,11 @@ def draft1(request):
                     return HttpResponseRedirect("/draft2/")
     else:
         return HttpResponseRedirect("/login/")           
-    return render(request,"draft1.html",{"frm1":frm1,"sub":sub,"con":con,"s":s,"data2":data2})    
+    return render(request,"draft1.html",{"frm1":frm1,"sub":sub,"con":con,"s":s,"data2":data2})  
+  
 def inbox(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         data3=""
         s="sent"
@@ -310,7 +318,10 @@ def inbox(request):
     else:
         return HttpResponseRedirect("/login/")    
     return render(request,"inbox.html",{"data":data,"data1":data1[0],"data2":data2,"c1":c1[0]})
+
 def search(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         z=request.session["z"]
         unam=request.session['username']
@@ -325,12 +336,12 @@ def search(request):
         return HttpResponseRedirect("/login/")       
     return render(request,"search.html",{"data2":data2,"data3":data3})
 
-
 def sent(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     c1="draft"
-    if(request.session['username']):
-        
+    if(request.session['username']):        
         s1="sent"
         unam=request.session['username']
         c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
@@ -341,7 +352,6 @@ def sent(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-    
         s="sent"
         c.execute("select count(*) from message where sendto='"+unam+"' and `status`='"+s+"'")
         data1=c.fetchone()
@@ -356,8 +366,9 @@ def sent(request):
         return HttpResponseRedirect("/login/")      
     return render(request,"sent.html",{"data":data,"data2":data2,"feed":feed,"det":det,"c1":c1[0],"data1":data1[0]})
 
-
 def draft(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         s1="sent"
@@ -370,10 +381,8 @@ def draft(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-    
         s="draft"
         c1="sent"
-        
         c.execute("select * from registration where email_id='"+unam+"'")
         data2=c.fetchall()
         c.execute("select count(*) from message where sendto='"+unam+"' and `status`='"+c1+"'")
@@ -385,7 +394,10 @@ def draft(request):
     else:
         return HttpResponseRedirect("/login/")     
     return render(request,"draft.html",{"data":data,"data1":data1[0],"data2":data2,"data4":data4[0],"feed":feed,"det":det})   
+
 def message1(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         c.execute("select * from registration")
         data=c.fetchall()
@@ -395,21 +407,20 @@ def message1(request):
                 content=request.POST.get("content")
             else:
                 content=request.POST.get("content")
-
             sendto=request.POST.get("sendto")
             date=datetime.date.today()
             subject=request.POST.get("subject")
             unam=request.session['username']
             status="sent"
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            #c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
             return HttpResponseRedirect("/inbox/")
-
-
     return render(request,"message1.html",{"frm1":frm1,"data":data}) 
+
 def draft2(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         c.execute("select * from registration")
         data=c.fetchall()
@@ -421,30 +432,22 @@ def draft2(request):
                 content=request.POST.get("content")
             else:
                 content=request.POST.get("content")
-
             sendto=request.POST.get("sendto")
             date=datetime.date.today()
             subject=request.POST.get("subject")
             unam=request.session['username']
             status="sent"
             s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            #c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
-            # c.execute("select max(m_id) from message where `from`='"+ str(unam) +"'")
-            # did=c.fetchone()
-
-
-            #draft
             c.execute("delete from message where m_id='"+ str(request.session['did']) +"'")
             db.commit()
-
             return HttpResponseRedirect("/inbox/")
-
-
     return render(request,"draft2.html",{"frm1":frm1,"sub":sub,"con":con,"data":data})
 
 def userview(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         c.execute("select * from registration")
         data=c.fetchall()
@@ -456,7 +459,10 @@ def userview(request):
     else:
         return HttpResponseRedirect("/login/")     
     return render(request,"userview.html",{"data":data})
+
 def profile(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         s1="sent"
@@ -469,7 +475,6 @@ def profile(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-    
         c.execute("select * from registration where email_id='"+unam+"'")
         data=c.fetchall()
         if(request.POST):
@@ -477,7 +482,10 @@ def profile(request):
     else:
         return HttpResponseRedirect("/login/")
     return render(request,"profile.html",{"data":data,"feed":feed,"det":det}) 
+
 def editprofile(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         s1="sent"
@@ -490,7 +498,6 @@ def editprofile(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-    
         c.execute("select * from registration where email_id='"+unam+"'")
         data=c.fetchall() 
         for d in data:
@@ -499,37 +506,35 @@ def editprofile(request):
             name=request.POST.get("name")
             address=request.POST.get("address")
             dob=request.POST.get("dob")
-            #gender=request.POST.get("gender")             
             email=request.POST.get("email")
             mobile=request.POST.get("mobile")
-            #password=request.POST.get("password")
             c.execute("update registration set name='"+name+"',address='"+address+"',dob='"+str(dob)+"',email_id='"+email+"',mobile='"+str(mobile)+"' where u_id='"+str(uid)+"'")
             db.commit()
             return HttpResponseRedirect("/profile/")
     else:
         return HttpResponseRedirect("/login/")
     return render(request,"editprofile.html",{"data":data,"feed":feed,"det":det})   
+
 def adminhome(request):
     if request.session["username"]:
        return render(request,"adminhome.html")                   
     else:
           return HttpResponseRedirect("/login")
-         
-
-
-    
         
 def voice(request):
     return render(request,"voice.html") 
+
 def commonhome(request):
     return render(request,"commonhome.html")  
+
 def logout(request):
     data=request.GET.get("id")
     request.session['username']=""
     return render(request,"logout.html",{"data":data})  
-       
   
 def userhome(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         unam=request.session['username']
@@ -555,6 +560,8 @@ def userhome(request):
     return render(request,"adminhome.html",{"data":data,"count":count[0],"data1":data1[0],"count1":count1[0],"det":det,"feed":feed})      
 
 def feedback(request):
+    db = get_db()
+    c = db.cursor()
     det=[]
     if(request.session['username']):
         s1="sent"
@@ -567,7 +574,6 @@ def feedback(request):
             det.append(count3)
         c.execute("select complaint from feedback order by f_id desc limit 3")    
         feed=c.fetchall()
-        
         c.execute("select * from registration where email_id='"+unam+"'")
         data=c.fetchall()
         content="no data"
@@ -581,7 +587,6 @@ def feedback(request):
             status="sent"
             unam=request.session['username']
             s="insert into feedback(`from`,`to`,`date`,sub,complaint) values('"+unam+"','"+msgto+"','"+ str(date)+"',"+subject+","+content+")"
-        # c.execute("insert into message(from,sendto,subject,content) values('"+unam+"','"+sendto+"','"+subject+"','"+content+"')")
             c.execute(s)
             db.commit()
         if(request.POST):
@@ -598,13 +603,18 @@ def feedback(request):
     return render(request,"feedback.html",{"data":data,"det":det,"feed":feed}) 
          
 def viewfeedback(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         c.execute("select * from feedback")
         data=c.fetchall()
     else:
         return HttpResponseRedirect("/login/")    
     return render(request,"viewfeedback.html",{"data":data}) 
+
 def changeimage(request):
+    db = get_db()
+    c = db.cursor()
     if(request.session['username']):
         unam=request.session['username']
         c.execute("select * from registration where email_id='"+unam+"'")
@@ -621,5 +631,3 @@ def changeimage(request):
     else:
         return HttpResponseRedirect("/login/")         
     return render(request,"changeimage.html",{"data":data})    
-
-# Create your views here.
