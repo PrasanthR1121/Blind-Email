@@ -1,48 +1,85 @@
-from django import db
-from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect
 import MySQLdb 
 import datetime
 import subprocess
+from django.shortcuts import render,redirect
+from django.http import HttpResponse,HttpResponseRedirect
 from django.core.files.storage import FileSystemStorage
-import os
-
-def get_db():
-    return MySQLdb.connect(
-        host="localhost",
-        user="root",
-        passwd="",
-        db="dataexchange"
-    )
+from .models import Registration, Message, Feedback
 
 def login(request):
-    db = get_db()
-    c = db.cursor()
-    error=""
-    request.session['username']=""
-    password=""
-    if(request.POST):        
-        username=request.POST.get("uname")
-        request.session['username']=username
-        password=request.POST.get("password")
-        if((username=='admin@gmail.com') and (password=='admin')):
-             return HttpResponseRedirect("/userview/")
-        else:
-            c.execute("select count('"+ username +"') from registration where email_id='"+ username +"' and password='"+password+"'" )
-            data=c.fetchone()
-            if data[0]==1:
-                c.execute("select status from registration where email_id='"+username+"' ")
-                data1=c.fetchone() 
-                if (data[0]==1 and data1[0]=="approved"):      
-                        return HttpResponseRedirect("/userhome/")            
-                else:
-                        if(data1[0]=="rejected"):
-                            error="you have been rejected from ADMIN"
-                        else:
-                            error="enter valid email"   
+    error = ""
+
+    if request.method == "POST":
+        username = request.POST.get("uname")
+        password = request.POST.get("password")
+
+        if username == "admin@gmail.com" and password == "admin":
+            return redirect("/userview/")
+
+        try:
+            user = Registration.objects.get(email_id=username, password=password)
+
+            if user.status == "approved":
+                request.session['username'] = user.email_id
+                return redirect("/userhome/")
+            elif user.status == "rejected":
+                error = "You have been rejected by admin"
             else:
-                    return HttpResponseRedirect("/login/") 
-    return render(request,"login.html",{"error":error})
+                error = "Waiting for approval"
+
+        except Registration.DoesNotExist:
+            error = "Invalid credentials"
+
+    return render(request, "login.html", {"error": error})
+
+def reg(request):
+    error = ""
+    msg = ""
+
+    if request.method == "POST":
+        email = request.POST.get("email")
+        mobile = request.POST.get("mobile")
+
+        if Registration.objects.filter(email_id=email).exists():
+            error = "Email already exists"
+        elif Registration.objects.filter(mobile=mobile).exists():
+            error = "Mobile already exists"
+        else:
+            Registration.objects.create(
+                name=request.POST.get("name"),
+                address=request.POST.get("address"),
+                dob=request.POST.get("dob"),
+                gender=request.POST.get("gender"),
+                email_id=email,
+                mobile=mobile,
+                password=request.POST.get("password"),
+                answer=request.POST.get("answer"),
+            )
+            msg = "Registered successfully. Wait for approval."
+
+    return render(request, "reg.html", {"error": error, "msg": msg})
+
+def message(request):
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    if request.method == "POST":
+        receiver_email = request.POST.get("sendto")
+        receiver = Registration.objects.get(email_id=receiver_email)
+
+        Message.objects.create(
+            sender=user,
+            receiver=receiver,
+            subject=request.POST.get("subject"),
+            content=request.POST.get("content"),
+            status="sent"
+        )
+
+    inbox = Message.objects.filter(receiver=user).order_by("-id")
+
+    return render(request, "message.html", {"messages": inbox})
 
 def adminlogin(request):
     error=""
@@ -58,205 +95,143 @@ def adminlogin(request):
     return render(request,"adminlogin.html",{"error":error})
          
 def forgot(request):
-    db = get_db()
-    c = db.cursor()
-    error=""
-    if(request.POST):
-        username=request.POST.get("uname")
-        mobile=request.POST.get("mobile")
-        request.session['username']=username
-        c.execute("select count('"+ username +"') from registration where email_id='"+ username +"' and mobile='"+ mobile +"'")
-        data=c.fetchone()
-        if (data[0]==1):
-            return HttpResponseRedirect("/security/")
-        else:
-            error="enter valid email"       
+    error = ""
 
-    return render(request,"forgot.html",{"error":error})   
+    if request.method == "POST":
+        username = request.POST.get("uname")
+        mobile = request.POST.get("mobile")
+
+        user = Registration.objects.filter(
+            email_id=username,
+            mobile=mobile
+        ).first()
+
+        if user:
+            request.session['reset_user'] = user.email_id
+            return redirect("/security/")
+        else:
+            error = "Invalid email or mobile"
+
+    return render(request, "forgot.html", {"error": error}) 
 
 def security(request):
-    db = get_db()
-    c = db.cursor()
-    error=""
-    if(request.POST):
-        answer=request.POST.get("answer")
-        c.execute("select count(*) from registration where answer='"+answer+"'")
-        print("select count(*) from registration where answer='"+answer+"'")
-        data=c.fetchone()
-        if (data[0]>1):
-            return HttpResponseRedirect("/newpass/")
+    error = ""
+
+    if request.method == "POST":
+        answer = request.POST.get("answer")
+        username = request.session.get("reset_user")
+
+        user = Registration.objects.filter(
+            email_id=username,
+            answer=answer
+        ).first()
+
+        if user:
+            return redirect("/newpass/")
         else:
-            error="enter correct answer"  
-    return render(request,"security.html",{"error":error}) 
+            error = "Wrong answer"
+
+    return render(request, "security.html", {"error": error})
 
 def newpass(request):
-    db = get_db()
-    c = db.cursor()
-    error=""
-    unam=request.session['username']
-    if(request.POST):
-        password=request.POST.get("password")
-        cpassword=request.POST.get("cpassword")
-        if(password==cpassword):
-            c.execute("update registration set password='"+password+"' where email_id='"+unam+"'")
-            db.commit()
-            return HttpResponseRedirect("/login/")
-        else: 
-            error="password mismatch" 
-    return render(request,"newpass.html",{"error":error})            
+    error = ""
 
+    username = request.session.get("reset_user")
 
-def reg(request):
-    db = get_db()
-    c = db.cursor()
-    error=""
-    msg=""
-    err=""
-    msg1=""
-    if(request.POST):
-        name=request.POST.get("name")
-        address=request.POST.get("address")
-        dob=request.POST.get("dob")
-        gender=request.POST.get("gender")             
-        email=request.POST.get("email")
-        mobile=request.POST.get("mobile")
-        password=request.POST.get("password")
-        cpassword=request.POST.get("cpassword")
-        answer=request.POST.get("answer")
-        
-        if(request.FILES['img']):
-            myfile=request.FILES['img']
-            fs=FileSystemStorage()
-            filename=fs.save(myfile.name,myfile)
-            fileurl=fs.url(filename)
+    if not username:
+        return redirect("/login/")
+
+    if request.method == "POST":
+        password = request.POST.get("password")
+        cpassword = request.POST.get("cpassword")
+
+        if password == cpassword:
+            user = Registration.objects.get(email_id=username)
+            user.password = password
+            user.save()
+
+            request.session.pop("reset_user", None)
+            return redirect("/login/")
         else:
-            fileurl="/static/media/a.png"
-        if(password==cpassword):
-            c.execute("select count('"+email+"') from registration where email_id='"+email+"'")
-            data=c.fetchone()
-            c.execute("select count('"+mobile+"') from registration where mobile='"+mobile+"'")
-            mob=c.fetchone()
-            if (data[0]==0):
-                if (mob[0]==0):
-                    c.execute("insert into registration(name,address,dob,gender,email_id,mobile,image,password,answer) values('"+name+"','"+address+"','"+dob+"','"+gender+"','"+email+"','"+str(mobile)+"','"+fileurl+"','"+password+"','"+answer+"')")
-                    db.commit()
-                    msg="wait for admin to approve"
-                else:
-                    msg1="existing mobile number"
-            else:
-                error="USERNAME ALREDY EXISTED"
-        else:
-            err="password and confirm password donot match"        
-    return render(request,"reg.html",{"error":error,"msg":msg,"err":err,"msg1":msg1})    
+            error = "Password mismatch"
+
+    return render(request, "newpass.html", {"error": error})
 
 def save(request):
-    db = get_db()
-    c = db.cursor()
-    if(request.session['username']):
-        unam=request.session['username']
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        content="no data"
-        s=""
-        if(request.GET.get("msg")):
-            content=request.GET.get("msg")
-            sendto=request.GET.get("to")
-            date=datetime.date.today()
-            subject=request.GET.get("sub")
-            status="draft"
-            unam=request.session['username']
-            s="insert into message(`from`,sendto,date,subject,content,status) values('"+ str(unam) +"',"+ str(sendto) +",'"+ str(date)+"',"+ str(subject) +","+ str(content) +",'"+ str(status) +"')"
-            c.execute(s)
-            db.commit()
-    else:
-        return HttpResponseRedirect("/login/")
-            
-    return render(request,"message.html",{"data":s,"msg":request.POST.get("content"),"data2":data2})        
-       
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    if request.method == "POST":
+        receiver_email = request.POST.get("sendto")
+        receiver = Registration.objects.filter(email_id=receiver_email).first()
+
+        if receiver:
+            Message.objects.create(
+                sender=user,
+                receiver=receiver,
+                subject=request.POST.get("subject"),
+                content=request.POST.get("content"),
+                status="draft"
+            )
+
+    return redirect("/draft/")     
+
 def message(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    if(request.session['username']):
-        unam=request.session['username']
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        content="no data"
-        s="sent"
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        if(request.GET.get("msg")):
-            content=request.GET.get("msg")
-            sendto=request.GET.get("to")
-            date=datetime.date.today()
-            subject=request.GET.get("sub")
-            status="sent"
-            unam=request.session['username']
-            s="insert into message(`from`,sendto,date,subject,content,status) values('"+ str(unam) +"',"+ str(sendto) +",'"+ str(date)+"',"+ str(subject) +","+ str(content) +",'"+ str(status) +"')"
-            c.execute(s)
-            db.commit()
+    if not request.session.get('username'):
+        return redirect("/login/")
 
-        if("send" in request.POST):
-            if(request.GET.get("content")==""):
-                content=request.POST.get("content")
-            else:
-                content=request.POST.get("content")
+    user = Registration.objects.get(email_id=request.session['username'])
 
-            sendto=request.POST.get("sendto")
-            date=datetime.date.today()
-            subject=request.POST.get("subject")
-            unam=request.session['username']
-            status="sent"
-            s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            c.execute(s)
-            db.commit()
+    if request.method == "POST":
+        receiver_email = request.POST.get("sendto")
+        receiver = Registration.objects.filter(email_id=receiver_email).first()
 
-        if("draft" in request.POST):
-            if(request.GET.get("content")==""):
-                content=request.POST.get("content")
-            else:
-                content=request.POST.get("content")
+        if receiver:
+            status = "sent" if "send" in request.POST else "draft"
 
-            sendto=request.POST.get("sendto")
-            date=datetime.date.today()
-            subject=request.POST.get("subject")
-            unam=request.session['username']
-            status="Draft"
-            s="insert into message(`from`,sendto,date,subject,content,status) values('"+str(unam)+"','"+str(sendto)+"','"+ str(date)+"','"+str(subject)+"','"+str(content)+"','"+status+"')"
-            c.execute(s)
-            db.commit()
-    else:
-        return HttpResponseRedirect("/login/")
-            
-    return render(request,"message.html",{"data":s,"msg":request.POST.get("content"),"data2":data2,"det":det,"feed":feed})
+            Message.objects.create(
+                sender=user,
+                receiver=receiver,
+                subject=request.POST.get("subject"),
+                content=request.POST.get("content"),
+                status=status
+            )
+
+    inbox_preview = Message.objects.filter(
+        receiver=user,
+        status="sent"
+    ).order_by("-id")[:2]
+
+    feed = Feedback.objects.all().order_by("-id")[:3]
+
+    return render(request, "message.html", {
+        "messages": inbox_preview,
+        "feed": feed
+    })
 
 def compose(request):
-    db = get_db()
-    c = db.cursor()
-    if(request.session['username']):
-        unam=request.session['username']
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        frm=request.GET.get("count")
-        s="select `from`,subject,content from message where m_id='"+frm+"'"
-        print(s)
-        c.execute(s)
-        data=c.fetchall()
-        frm1=data[0][0]
-        sub=data[0][1]
-        con=data[0][2]
-        request.session['frm1']=frm1
-        if request.POST:
-                    return HttpResponseRedirect("/message1/")
-    else:
-        return HttpResponseRedirect("/login/")           
-    return render(request,"compose.html",{"frm1":frm1,"sub":sub,"con":con,"s":s,"data2":data2})
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    msg_id = request.GET.get("count")
+
+    message = Message.objects.filter(id=msg_id).first()
+
+    if not message:
+        return redirect("/inbox/")
+
+    request.session['reply_to'] = message.sender.email_id
+
+    if request.method == "POST":
+        return redirect("/message1/")
+
+    return render(request, "compose.html", {
+        "frm1": message.sender.email_id,
+        "sub": message.subject,
+        "con": message.content
+    })
 
 def draft1(request):
     db = get_db()
@@ -295,106 +270,67 @@ def draft1(request):
     return render(request,"draft1.html",{"frm1":frm1,"sub":sub,"con":con,"s":s,"data2":data2})  
   
 def inbox(request):
-    db = get_db()
-    c = db.cursor()
-    if(request.session['username']):
-        data3=""
-        s="sent"
-        c1="draft"
-        unam=request.session['username']
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        c.execute("select count(*) from message where sendto='"+unam+"' and `status`='"+s+"'")
-        data1=c.fetchone()
-        c.execute("select count(*) from message where `from`='"+unam+"' and `status`='"+c1+"'")
-        c1=c.fetchone()
-        c.execute("select `from`,date,subject,content,sendto,m_id from message where sendto='"+unam+"' and `status`='"+s+"'")
-        data=c.fetchall()
-        if(request.POST):
-            request.session["z"]=request.POST.get("se")
-            
-            return HttpResponseRedirect("/search/")
-            return render(request,"search.html",{"data3":data3})
-    else:
-        return HttpResponseRedirect("/login/")    
-    return render(request,"inbox.html",{"data":data,"data1":data1[0],"data2":data2,"c1":c1[0]})
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    messages = Message.objects.filter(
+        receiver=user,
+        status="sent"
+    ).order_by("-id")
+
+    count_inbox = messages.count()
+    count_draft = Message.objects.filter(
+        sender=user,
+        status="draft"
+    ).count()
+
+    return render(request, "inbox.html", {
+        "data": messages,
+        "data1": count_inbox,
+        "c1": count_draft
+    })
 
 def search(request):
-    db = get_db()
-    c = db.cursor()
-    if(request.session['username']):
-        z=request.session["z"]
-        unam=request.session['username']
-        y=z+'%'
-        s="select * from message where content like '"+z+"%' and sendto ='"+unam+"'"
-        c.execute(s)
-        data3=c.fetchall()
-        unam=request.session['username']
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-    else:
-        return HttpResponseRedirect("/login/")       
-    return render(request,"search.html",{"data2":data2,"data3":data3})
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    keyword = request.POST.get("se")
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    results = Message.objects.filter(
+        receiver=user,
+        content__icontains=keyword
+    )
+
+    return render(request, "search.html", {"data3": results})
 
 def sent(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    c1="draft"
-    if(request.session['username']):        
-        s1="sent"
-        unam=request.session['username']
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        s="sent"
-        c.execute("select count(*) from message where sendto='"+unam+"' and `status`='"+s+"'")
-        data1=c.fetchone()
-        c.execute("select count(*) from message where `from`='"+unam+"' and `status`='"+c1+"'")
-        c1=c.fetchone()
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        c.execute("select * from message where `from`='"+unam+"' and `status`='"+s+"'") 
-        data=c.fetchall()
-        print("select * from message where `from`='"+unam+"' and `status`='"+s+"'")
-    else:
-        return HttpResponseRedirect("/login/")      
-    return render(request,"sent.html",{"data":data,"data2":data2,"feed":feed,"det":det,"c1":c1[0],"data1":data1[0]})
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    sent_msgs = Message.objects.filter(
+        sender=user,
+        status="sent"
+    )
+
+    return render(request, "sent.html", {"data": sent_msgs})
 
 def draft(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    if(request.session['username']):
-        s1="sent"
-        unam=request.session['username']
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        s="draft"
-        c1="sent"
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data2=c.fetchall()
-        c.execute("select count(*) from message where sendto='"+unam+"' and `status`='"+c1+"'")
-        data1=c.fetchone()
-        c.execute("select count(*) from message where `from`='"+unam+"' and `status`='"+s+"'")
-        data4=c.fetchone()
-        c.execute("select sendto,date,subject,content,m_id from message where `from`='"+unam+"' and `status`='"+s+"'")
-        data=c.fetchall()
-    else:
-        return HttpResponseRedirect("/login/")     
-    return render(request,"draft.html",{"data":data,"data1":data1[0],"data2":data2,"data4":data4[0],"feed":feed,"det":det})   
+    if not request.session.get('username'):
+        return redirect("/login/")
 
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    drafts = Message.objects.filter(
+        sender=user,
+        status="draft"
+    )
+
+    return render(request, "draft.html", {"data": drafts})
 def message1(request):
     db = get_db()
     c = db.cursor()
@@ -461,59 +397,29 @@ def userview(request):
     return render(request,"userview.html",{"data":data})
 
 def profile(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    if(request.session['username']):
-        s1="sent"
-        unam=request.session['username']
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data=c.fetchall()
-        if(request.POST):
-            return HttpResponseRedirect("/editprofile/")
-    else:
-        return HttpResponseRedirect("/login/")
-    return render(request,"profile.html",{"data":data,"feed":feed,"det":det}) 
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    return render(request, "profile.html", {"data": user})
 
 def editprofile(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    if(request.session['username']):
-        s1="sent"
-        unam=request.session['username']
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data=c.fetchall() 
-        for d in data:
-                uid=d[0]
-        if(request.POST):
-            name=request.POST.get("name")
-            address=request.POST.get("address")
-            dob=request.POST.get("dob")
-            email=request.POST.get("email")
-            mobile=request.POST.get("mobile")
-            c.execute("update registration set name='"+name+"',address='"+address+"',dob='"+str(dob)+"',email_id='"+email+"',mobile='"+str(mobile)+"' where u_id='"+str(uid)+"'")
-            db.commit()
-            return HttpResponseRedirect("/profile/")
-    else:
-        return HttpResponseRedirect("/login/")
-    return render(request,"editprofile.html",{"data":data,"feed":feed,"det":det})   
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    if request.method == "POST":
+        user.name = request.POST.get("name")
+        user.address = request.POST.get("address")
+        user.dob = request.POST.get("dob")
+        user.mobile = request.POST.get("mobile")
+        user.save()
+
+        return redirect("/profile/")
+
+    return render(request, "editprofile.html", {"data": user}) 
 
 def adminhome(request):
     if request.session["username"]:
@@ -560,47 +466,20 @@ def userhome(request):
     return render(request,"adminhome.html",{"data":data,"count":count[0],"data1":data1[0],"count1":count1[0],"det":det,"feed":feed})      
 
 def feedback(request):
-    db = get_db()
-    c = db.cursor()
-    det=[]
-    if(request.session['username']):
-        s1="sent"
-        unam=request.session['username']
-        c.execute("select * from(select * from message where sendto='"+unam+"' and status='"+s1+"' order by m_id desc limit 2)as r order by m_id")
-        count2=c.fetchall()
-        for i in count2:
-            c.execute("select name,image from registration where email_id='"+ str(i[2]) +"'")
-            count3=c.fetchone()
-            det.append(count3)
-        c.execute("select complaint from feedback order by f_id desc limit 3")    
-        feed=c.fetchall()
-        c.execute("select * from registration where email_id='"+unam+"'")
-        data=c.fetchall()
-        content="no data"
-        s=""
-        if(request.GET.get("msg")):
-            content=request.GET.get("msg")
-            msgto="admin"
-            
+    if not request.session.get('username'):
+        return redirect("/login/")
+
+    user = Registration.objects.get(email_id=request.session['username'])
+
+    if request.method == "POST":
+        Feedback.objects.create(
+            sender=user,
+            subject=request.POST.get("subject"),
+            complaint=request.POST.get("mycontent"),
             date=datetime.date.today()
-            subject=request.GET.get("sub")
-            status="sent"
-            unam=request.session['username']
-            s="insert into feedback(`from`,`to`,`date`,sub,complaint) values('"+unam+"','"+msgto+"','"+ str(date)+"',"+subject+","+content+")"
-            c.execute(s)
-            db.commit()
-        if(request.POST):
-            unam=request.session['username']
-            msgto="admin"
-            date=datetime.date.today()
-            subject=request.POST.get("subject")
-            feedback=request.POST.get("mycontent")
-            c.execute("insert into feedback(`from`,`to`,`date`,sub,complaint) values('"+unam+"','"+msgto+"','"+ str(date)+"','"+subject+"','"+feedback+"')")
-            db.commit()
-    else:
-        return HttpResponseRedirect("/login/")          
-            
-    return render(request,"feedback.html",{"data":data,"det":det,"feed":feed}) 
+        )
+
+    return render(request, "feedback.html")
          
 def viewfeedback(request):
     db = get_db()

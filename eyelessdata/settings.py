@@ -65,12 +65,8 @@ WSGI_APPLICATION = 'eyelessdata.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dataexchange',
-        'USER': 'support',
-        'PASSWORD': 'Support@123456',
-        'HOST': '192.9.200.228',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
