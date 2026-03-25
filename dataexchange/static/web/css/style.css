@@ -1,467 +1,93 @@
-/*--A Design by W3layouts 
-Author: W3layout
-Author URL: http://w3layouts.com
-License: Creative Commons Attribution 3.0 Unported
-License URL: http://creativecommons.org/licenses/by/3.0/
---*/
-
-
-/*--- reset code ---*/
-
-html,
-body,
-div,
-span,
-applet,
-object,
-iframe,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-blockquote,
-pre,
-a,
-abbr,
-acronym,
-address,
-big,
-cite,
-code,
-del,
-dfn,
-em,
-img,
-ins,
-kbd,
-q,
-s,
-samp,
-small,
-strike,
-strong,
-sub,
-sup,
-tt,
-var,
-b,
-u,
-i,
-dl,
-dt,
-dd,
-ol,
-nav ul,
-nav li,
-fieldset,
-form,
-label,
-legend,
-table,
-caption,
-tbody,
-tfoot,
-thead,
-tr,
-th,
-td,
-article,
-aside,
-canvas,
-details,
-embed,
-figure,
-figcaption,
-footer,
-header,
-hgroup,
-menu,
-nav,
-output,
-ruby,
-section,
-summary,
-time,
-mark,
-audio,
-video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
-}
-
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-menu,
-nav,
-section {
-	display: block;
-}
-
-ol,
-ul {
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
-}
-
-blockquote,
-q {
-	quotes: none;
-}
-
-blockquote:before,
-blockquote:after,
-q:before,
-q:after {
-	content: '';
-	content: none;
-}
-
-table {
-	border-collapse: collapse;
-	border-spacing: 0;
-}
-
-
-/* start editing from here */
-
-a {
-	text-decoration: none;
-}
-
-.txt-wthree-rt {
-	text-align: right;
-}
-
-
-/* text align right */
-
-.txt-wthree-lt {
-	text-align: left;
-}
-
-
-/* text align left */
-
-.txt-wthree-center {
-	text-align: center;
-}
-
-
-/* text align center */
-
-.float-rt {
-	float: right;
-}
-
-
-/* float right */
-
-.float-lt {
-	float: left;
-}
-
-
-/* float left */
-
-.clear {
-	clear: both;
-}
-
-
-/* clear float */
-
-.pos-relative {
-	position: relative;
-}
-
-
-/* Position Relative */
-
-.pos-absolute {
-	position: absolute;
-}
-
-
-/* Position Absolute */
-
-.vertical-base {
-	vertical-align: baseline;
-}
-
-
-/* vertical align baseline */
-
-.vertical-top {
-	vertical-align: top;
-}
-
-
-/* vertical align top */
-
-nav.vertical ul li {
-	display: block;
-}
-
-
-/* vertical menu */
-
-nav.horizontal ul li {
-	display: inline-block;
-}
-
-
-/* horizontal menu */
-
-img {
-	max-width: 100%;
-}
-
-
-/*--- end reset code ---*/
-
 body {
-	font-family: 'Work Sans', sans-serif;
-	background: url(../images/bg.jpg) no-repeat center;
-	background-size: cover;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    overflow: hidden;
+    background: #0f172a;
+    color: white;
 }
 
-p {
-	font-size: 1em;
-	line-height: 1.5;
+/* Animated gradient background */
+.bg-animation {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(-45deg, #0f172a, #1e293b, #0ea5e9, #9333ea);
+    background-size: 400% 400%;
+    animation: gradientMove 12s ease infinite;
+    z-index: -1;
 }
 
-.text-center {
-	text-align: center;
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-
-/* Header */
-
-a {
-	transition: 0.5s all;
-	-webkit-transition: 0.5s all;
-	-moz-transition: 0.5s all;
-	-o-transition: 0.5s all;
-	-ms-transition: 0.5s all;
-	text-decoration: none;
+/* Glass card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    max-width: 450px;
+    width: 100%;
+    animation: fadeIn 1.2s ease-in-out;
 }
 
-.agileits-logo {
-	padding: 2em;
+/* Title */
+.title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
-.container-w3layouts {
-	width: 50%;
-	margin: auto;
-	padding: 7em 0 9em;
+/* Subtitle */
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.85;
 }
 
-.agileits-logo h1 a {
-	color: #fff;
-	display: inline-block;
-	font-size: 2.5em;
-	font-family: 'Work Sans', sans-serif;
-	text-transform: capitalize;
-	font-style: italic;
-	font-weight: 500;
+/* Buttons */
+.btn-custom {
+    background: linear-gradient(45deg, #0ea5e9, #9333ea);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 30px;
+    transition: 0.3s;
 }
 
-.agileits-logo h1 span {
-	color: #fff;
-	font-size: 1.2em;
-	margin-right: 10px;
+.btn-custom:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.6);
 }
 
-h2.txt-wthree {
-	font-size: 5em;
-	color: #fff;
-	text-transform: capitalize;
-	font-weight: 600;
-	text-shadow: 3px 3px 3px #252b4f;
-	margin: 0.2em 0;
+.btn-custom-outline {
+    border: 2px solid white;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 30px;
+    transition: 0.3s;
 }
 
-.home a {
-	display: block;
-	background: #fff;
-	width: 20%;
-	border: 5px double #1e1d23;
-	padding: 7px 0;
-	margin: 2em auto 0;
-	color: #000;
-	text-transform: uppercase;
-	font-weight: 600;
-	border-radius: 10px;
+.btn-custom-outline:hover {
+    background: white;
+    color: #0f172a;
 }
 
-.container-w3layouts p {
-	color: #fff;
-	font-size: 22px;
-	font-weight: 300;
-	margin: 35px 0;
+/* Fade animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.w3_agile-footer p {
-	text-align: center;
-	font-size: 14px;
-	color: #fff;
-	letter-spacing: 1px;
-	font-weight: 300;
-}
-
-.w3_agile-footer p a {
-	color: #fff;
-}
-
-.w3_agile-footer p a:hover {
-	color: #000;
-}
-
-@media screen and (max-width: 1080px) {
-	.container-w3layouts {
-		width: 54%;
-		padding: 3em 0 5em;
-	}
-}
-
-@media screen and (max-width: 1050px) {
-	.container-w3layouts {
-		width: 55%;
-	}
-}
-
-@media screen and (max-width: 1024px) {
-	h2.txt-wthree {
-		font-size: 4.5em;
-	}
-	.container-w3layouts {
-		width: 56%;
-	}
-}
-
-@media screen and (max-width: 1024px) {
-	.container-w3layouts {
-		width: 58%;
-	}
-}
-
-@media screen and (max-width: 991px) {
-	h2.txt-wthree {
-		font-size: 4.4em;
-	}
-	.container-w3layouts {
-		width: 64%;
-	}
-}
-
-@media screen and (max-width: 900px) {
-	.container-w3layouts {
-		width: 72%;
-	}
-}
-
-@media screen and (max-width: 800px) {
-	.container-w3layouts p {
-		color: #fff;
-		font-size: 20px;
-	}
-	.w3_agile-footer {
-		padding: 0em 0 4em;
-	}
-}
-@media screen and (max-width: 736px) {
-	h2.txt-wthree {
-		font-size: 4.2em;
-	}
-}
-
-@media screen and (max-width: 667px) {
-	h2.txt-wthree {
-		font-size: 4em;
-	}
-	.container-w3layouts {
-		width: 80%;
-	}
-}
-
-@media screen and (max-width: 640px) {
-	.container-w3layouts p {
-		font-size: 19px;
-	}
-	h2.txt-wthree {
-		font-size: 3.8em;
-	}
-}
-
-@media screen and (max-width: 600px) {
-	.container-w3layouts p {
-		font-size: 18px;
-	}
-}
-
-@media screen and (max-width: 568px) {
-	h2.txt-wthree {
-		font-size: 3.6em;
-	}
-	.container-w3layouts p {
-		font-size: 17px;
-	}
-}
-
-@media screen and (max-width: 480px) {
-	.agileits-logo h1 a {
-		font-size: 2.4em;
-	}
-	.container-w3layouts {
-		width: 94%;
-	}
-	.home a {
-		width: 20%;
-		padding: 6px 0;
-		font-size: 0.9em;
-	}
-	.container-w3layouts p {
-		font-size: 16px;
-	}
-}
-
-@media screen and (max-width: 414px) {
-	h2.txt-wthree {
-		font-size: 3.4em;
-	}
-	.w3_agile-footer p {
-		padding: 0 1em;
-	}
-}
-
-@media screen and (max-width: 384px) {
-
-	.container-w3layouts {
-		padding: 3em 0 3em;
-	}
-	.home a {
-		width: 24%;
-	}
-	.agileits-logo {
-		padding: 1em;
-	}
-}
-@media screen and (max-width: 320px) {
-	h2.txt-wthree {
-		font-size: 3.1em;
-	}
-}
+/* Footer */
+footer {
+    opacity: 0.7;
+}	
