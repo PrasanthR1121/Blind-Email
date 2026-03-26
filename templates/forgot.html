@@ -1,59 +1,61 @@
-<!--A Design by W3layouts
-Author: W3layout
-Author URL: http://w3layouts.com
-License: Creative Commons Attribution 3.0 Unported
-License URL: http://creativecommons.org/licenses/by/3.0/
--->
 <!DOCTYPE html>
+<html lang="en">
 <head>
-<title>Visitors an Admin Panel Category Bootstrap Responsive Website Template | Login :: w3layouts</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="keywords" content="Visitors Responsive web template, Bootstrap Web Templates, Flat Web Templates, Android Compatible web template, 
-Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, SonyEricsson, Motorola web design" />
-<script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
-<!-- bootstrap-css -->
-<link rel="stylesheet" href="../static/webnew/css/bootstrap.min.css" >
-<!-- //bootstrap-css -->
-<!-- Custom CSS -->
-<link href="../static/webnew/css/style.css" rel='stylesheet' type='text/css' />
-<link href="../static/webnew/css/style-responsive.css" rel="stylesheet"/>
-<!-- font CSS -->
-<link href='//fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
-<!-- font-awesome icons -->
-<link rel="stylesheet" href="../static/webnew/css/font.css" type="text/css"/>
-<link href="../static/webnew/css/font-awesome.css" rel="stylesheet"> 
-<!-- //font-awesome icons -->
-<script src="../static/webnew/js/jquery2.0.3.min.js"></script>
+    <title>Forgot Password | Blind Email</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    {% load static %}
+    <link href="{% static 'web/css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-<div class="log-w3">
-<div class="w3layouts-main">
-	<h2>Forgot password</h2>
-    <form method="POST">
-        {% csrf_token %}
-			<input type="text" class="ggg" name="uname" placeholder="E-MAIL" required="">
-			<input type="text" class="ggg" name="mobile" placeholder="PHONE" required="">
-			<h6><a href="/login/">Login</a></h6>
-			
-				<div class="clearfix"></div>
-				<input type="submit" value="Submit" name="submit">
-				
-		</form>
-		<p>Don't Have an Account ?<a href="/reg/">Create an account</a></p>
-		
-		<p></p>
-		<br/>
-		<p><a href="/commonhome/">Go back to home</a></p>
-		<h2 style="color:whitesmoke"> {{error}}</h2>
+
+<div class="hero-bg"></div>
+
+<div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
+    
+    <div class="glass-card shadow-lg text-center">
+        <!-- <div class="mb-3" style="font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.5));">🔑</div> -->
+        
+        <h2 class="title mb-4" style="font-size: 2rem;">Reset Password</h2>
+        
+        <p class="subtitle mb-4" style="font-size: 0.95rem; opacity: 0.8;">
+            Enter your registered details to recover your account access.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3 text-start">
+                <input type="email" class="form-control" name="uname" placeholder="E-MAIL" required>
+            </div>
+            
+            <div class="mb-4 text-start">
+                <input type="tel" class="form-control" name="mobile" placeholder="PHONE NUMBER" required>
+            </div>
+            
+            <input type="submit" value="Verify Identity" class="btn btn-custom w-100 mb-4" name="submit">
+            
+            <div class="d-flex justify-content-between align-items-center mt-2 small">
+                <a href="/login/" class="text-info">Back to Login</a>
+                <a href="/reg/" class="text-info">Create Account</a>
+            </div>
+        </form>
+
+        <div class="mt-5 pt-3 border-top border-secondary border-opacity-25">
+			<p class="small"><a href="/commonhome/" class="opacity-50 text-light">Go back home</a></p>
+		</div>
+
+        {% if error %}
+        <div class="alert alert-danger bg-transparent border-danger text-danger mt-3 py-2 small">
+            {{error}}
+        </div>
+        {% endif %}
+    </div>
 </div>
-</div>
-<script src="../static/webnew/js/bootstrap.js"></script>
-<script src="../static/webnew/js/jquery.dcjqaccordion.2.7.js"></script>
-<script src="../static/webnew/js/scripts.js"></script>
-<script src="../static/webnew/js/jquery.slimscroll.js"></script>
-<script src="../static/webnew/js/jquery.nicescroll.js"></script>
-<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../static/webnew/js/flot-chart/excanvas.min.js"></script><![endif]-->
-<script src="../static/webnew/js/jquery.scrollTo.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
