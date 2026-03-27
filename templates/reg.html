@@ -14,11 +14,47 @@
 
 <div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
     
-    {% if error or msg or msg1 or err %}
-    <div class="alert alert-info border-0 bg-dark text-light mb-4 glass-card p-3 text-center" style="max-width: 500px;">
-        {{error}} {{msg}} {{msg1}} {{err}}
-    </div>
+    <div id="toast-container" class="toast-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast-card glass-card">
+                <div class="toast-content">
+                    <div class="toast-icon">
+                        {% if message.tags == 'error' %}
+                            <i class="fa fa-exclamation-circle text-danger"></i>
+                        {% else %}
+                            <i class="fa fa-check-circle text-success"></i>
+                        {% endif %}
+                    </div>
+                    <div class="toast-body">
+                        <div class="toast-title">{{ message.tags|upper }} Notification</div>
+                        <div class="toast-msg">{{ message }}</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast(this)">&times;</button>
+                </div>
+                <div class="toast-progress"></div>
+            </div>
+        {% endfor %}
+    {% elif error or msg or msg1 or err %}
+        <div class="toast-card glass-card">
+            <div class="toast-content">
+                <div class="toast-icon">
+                    {% if error or err %} 
+                        <i class="fa fa-exclamation-circle text-danger"></i> 
+                    {% else %} 
+                        <i class="fa fa-check-circle text-success"></i> 
+                    {% endif %}
+                </div>
+                <div class="toast-body">
+                    <div class="toast-title">System Notification</div>
+                    <div class="toast-msg">{{error}} {{msg}} {{msg1}} {{err}}</div>
+                </div>
+                <button class="toast-close" onclick="closeToast(this)">&times;</button>
+            </div>
+            <div class="toast-progress"></div>
+        </div>
     {% endif %}
+</div>
 
     <div class="glass-card shadow-lg">
         <h2 class="title text-center mb-4" style="font-size: 2rem;">Register Now</h2>
@@ -46,7 +82,7 @@
             <input type="tel" class="form-control mb-3" name="mobile" pattern="[6-9]{1}[0-9]{9}" placeholder="PHONE" required>
             
             <div class="text-start mb-2 small opacity-75">Profile Image</div>
-            <input type="file" class="form-control mb-3" name="img" required>
+            <input type="file" class="form-control mb-3" name="img">
             
             <input type="password" class="form-control mb-3" name="password" placeholder="PASSWORD" required>
             <input type="password" class="form-control mb-3" name="cpassword" placeholder="CONFIRM PASSWORD" required>
@@ -67,6 +103,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    function closeToast(btn) {
+        let toast = btn.closest('.toast-card');
+        toast.style.transform = "translateX(120%)";
+        toast.style.transition = "0.5s ease";
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const toasts = document.querySelectorAll('.toast-card');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                if(toast) {
+                    toast.style.transform = "translateX(120%)";
+                    toast.style.transition = "0.5s ease";
+                    setTimeout(() => toast.remove(), 2000);
+                }
+            }, 2500);
+        });
+    });
+</script>
 
 </body>
 </html>

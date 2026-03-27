@@ -37,7 +37,6 @@ body {
     );
 }
 
-/* Glass Card */
 .glass-card {
     background: rgba(255, 255, 255, 0.06);
     border-radius: 20px;
@@ -51,12 +50,10 @@ body {
     animation: fadeIn 1s ease;
 }
 
-/* Title */
 .title {
     font-size: 3.2rem;
     font-weight: 800;
     margin-bottom: 0.5rem;
-    /* High-contrast White to Cyan gradient */
     background: linear-gradient(135deg, #ffffff 50%, #00d9ff 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -64,14 +61,12 @@ body {
     filter: drop-shadow(0 0 8px rgba(0, 217, 255, 0.5));
 }
 
-/* Subtitle */
 .subtitle {
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.85);
     margin-bottom: 2rem;
 }
 
-/* Buttons */
 .btn-custom {
     background: linear-gradient(45deg, #0ea5e9, #9333ea);
     border: none;
@@ -143,7 +138,7 @@ footer {
 }
 
 .designer-link {
-    color: #0ea5e9; /* Cyan to match theme */
+    color: #0ea5e9; 
     text-decoration: none;
     font-weight: 600;
     transition: 0.3s;
@@ -152,4 +147,179 @@ footer {
 .designer-link:hover {
     color: #9333ea; 
     text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+}
+
+aside #sidebar {
+    background: rgba(5, 10, 24, 0.8) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leftside-navigation ul li a:hover, 
+.leftside-navigation ul li a.active {
+    background: rgba(14, 165, 233, 0.15) !important;
+    color: #00d9ff !important;
+    border-left: 4px solid #00d9ff;
+}
+
+header.header {
+    background: rgba(10, 20, 45, 0.85) !important;
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.brand {
+    background: #0ea5e9 !important; 
+}
+
+.market-update-block {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 15px !important;
+    backdrop-filter: blur(10px);
+    transition: 0.3s ease;
+}
+
+.market-update-block:hover {
+    transform: translateY(-5px);
+    border-color: #00d9ff !important;
+    box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);
+}
+
+.panel, .agileits-box, .stats-info-agileits, .calendar-widget {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    color: white !important;
+}
+
+.stats-title h4, .panel-heading {
+    color: #00d9ff !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.table { color: rgba(255, 255, 255, 0.9) !important; }
+.table thead th { border-bottom: 2px solid #00d9ff !important; color: #00d9ff; }
+.table tbody tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
+.badge.bg-success { background-color: #00d9ff !important; }
+.badge.bg-important { background-color: #9333ea !important; }
+
+.alert-floating {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    max-width: 400px;
+    width: 90%;
+    background: rgba(10, 20, 45, 0.9) !important; /* Deep dark background */
+    border: 1px solid #0ea5e9 !important; /* Cyan border for "Active" look */
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.4) !important;
+    animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideDown {
+    from {
+        top: -100px;
+        opacity: 0;
+    }
+    to {
+        top: 20px;
+        opacity: 1;
+    }
+}
+
+.container {
+    padding-top: 80px;
+}
+
+.toast-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* The Toast Card - Matching your Glassmorphism */
+.toast-card {
+    min-width: 320px;
+    background: rgba(10, 20, 45, 0.9) !important;
+    border: 1px solid rgba(0, 217, 255, 0.3) !important;
+    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: toastSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes toastSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.toast-icon { font-size: 1.5rem; }
+.toast-title { font-weight: 700; font-size: 0.9rem; color: #00d9ff; text-transform: uppercase; }
+.toast-msg { font-size: 0.85rem; color: rgba(255, 255, 255, 0.9); }
+
+.toast-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.5;
+    margin-left: auto;
+}
+
+.toast-close:hover { opacity: 1; }
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(to right, #00d9ff, #9333ea);
+    animation: progressFill 2s linear forwards;
+}
+
+toast-container {
+    position: fixed !important;
+    top: 25px !important;
+    right: 25px !important;
+    z-index: 10000 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: auto;
+}
+
+.toast-card {
+    background: rgba(10, 20, 45, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(0, 217, 255, 0.3) !important;
+    min-width: 300px;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+@keyframes progressFill {
+    from { width: 100%; }
+    to { width: 0%; }
 }

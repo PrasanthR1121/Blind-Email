@@ -2,35 +2,41 @@ import MySQLdb
 import datetime
 import subprocess
 from django.shortcuts import render,redirect
+from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect
 from django.core.files.storage import FileSystemStorage
 from .models import Registration, Message, Feedback
 
+
 def login(request):
-    error = ""
 
     if request.method == "POST":
         username = request.POST.get("uname")
         password = request.POST.get("password")
 
         if username == "admin@gmail.com" and password == "admin":
+            messages.success(request, "Welcome back, Admin!")
             return redirect("/userview/")
-
         try:
             user = Registration.objects.get(email_id=username, password=password)
 
             if user.status == "approved":
                 request.session['username'] = user.email_id
                 return redirect("/userhome/")
+            
             elif user.status == "rejected":
-                error = "You have been rejected by admin"
+                messages.error(request, "You have been rejected by admin")
+                return redirect('login') 
+            
             else:
-                error = "Waiting for approval"
+                messages.info(request, "Waiting for approval")
+                return redirect('login')
 
         except Registration.DoesNotExist:
-            error = "Invalid credentials"
+            messages.error(request, "Invalid credentials")
+            return redirect('login')
 
-    return render(request, "login.html", {"error": error})
+    return render(request, "login.html")
 
 def reg(request):
     error = ""
@@ -41,9 +47,11 @@ def reg(request):
         mobile = request.POST.get("mobile")
 
         if Registration.objects.filter(email_id=email).exists():
-            error = "Email already exists"
+            messages.error(request, "Email already exists")
+            return redirect('reg')
         elif Registration.objects.filter(mobile=mobile).exists():
-            error = "Mobile already exists"
+            messages.error(request, "Mobile already exists")
+            return redirect('reg')
         else:
             Registration.objects.create(
                 name=request.POST.get("name"),
@@ -55,7 +63,8 @@ def reg(request):
                 password=request.POST.get("password"),
                 answer=request.POST.get("answer"),
             )
-            msg = "Registered successfully. Wait for approval."
+            messages.success(request, "Registered successfully. Wait for approval.")
+            return redirect('reg')
 
     return render(request, "reg.html", {"error": error, "msg": msg})
 
