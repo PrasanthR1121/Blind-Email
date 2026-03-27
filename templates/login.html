@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Login | Blind Email</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,18 +9,43 @@
     {% load static %}
     <link href="{% static 'web/css/style.css' %}" rel="stylesheet">
 </head>
+
 <body>
 
-<div class="hero-bg"></div>
+    <div class="hero-bg"></div>
 
-<div class="container d-flex flex-column justify-content-center align-items-center min-vh-100">
-    
+    <div id="toast-container" class="toast-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast-card glass-card">
+                <div class="toast-content">
+                    <div class="toast-icon">
+                        {% if message.tags == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation text-danger"></i>
+                        {% elif message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info text-info"></i>
+                        {% endif %}
+                    </div>
+                    <div class="toast-body">
+                        <div class="toast-title">{{ message.tags|upper }}</div>
+                        <div class="toast-msg">{{ message }}</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast(this)">&times;</button>
+                </div>
+                <div class="toast-progress"></div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="glass-card shadow-lg">
-        <h2 class="title text-center mb-4" style="font-size: 2.2rem;">Sign In Now</h2>
+        <h2 class="title text-center mb-4">Sign In Now</h2>
         
         <form method="POST">
             {% csrf_token %}
-            
             <input type="email" class="form-control mb-3" name="uname" placeholder="E-MAIL" required>
             <input type="password" class="form-control mb-3" name="password" placeholder="PASSWORD" required> 
             
@@ -31,16 +57,34 @@
             <input type="submit" value="Sign In" class="btn btn-custom w-100 mb-3" name="login">
         </form>
         
-        <div class="mt-4">
+        <div class="mt-4 text-center">
             <p class="small">Don't Have an Account? <a href="/reg/" class="text-info">Create one</a></p>
-            <p class="small"><a href="/commonhome/" class="opacity-50 text-light">Go back home</a></p>
         </div>
-
-        {% if error %}
-        <div class="text-danger mt-2" style="text-align: center;">{{error}}</div>
-        {% endif %}
     </div>
 </div>
 
+<script>
+        function closeToast(btn) {
+        let toast = btn.closest('.toast-card');
+        toast.style.transform = "translateX(120%)";
+        toast.style.transition = "0.5s ease";
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const toasts = document.querySelectorAll('.toast-card');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                if(toast) {
+                    toast.style.transform = "translateX(120%)";
+                    toast.style.transition = "0.5s ease";
+                    toast.style.opacity = "0";
+                    setTimeout(() => toast.remove(), 2000);
+                }
+            }, 2500);
+        });
+    });
+    </script>
+    
 </body>
 </html>

@@ -8,33 +8,31 @@ from django.core.files.storage import FileSystemStorage
 from .models import Registration, Message, Feedback
 
 
-def login(request):
+from django.contrib import messages
+from django.shortcuts import render, redirect
 
+def login(request):
     if request.method == "POST":
         username = request.POST.get("uname")
         password = request.POST.get("password")
 
         if username == "admin@gmail.com" and password == "admin":
-            messages.success(request, "Welcome back, Admin!")
+            messages.success(request, "Welcome, Admin.")
             return redirect("/userview/")
+
         try:
             user = Registration.objects.get(email_id=username, password=password)
-
             if user.status == "approved":
                 request.session['username'] = user.email_id
+                messages.success(request, "Login Successful!")
                 return redirect("/userhome/")
-            
-            elif user.status == "rejected":
-                messages.error(request, "You have been rejected by admin")
-                return redirect('login') 
-            
             else:
-                messages.info(request, "Waiting for approval")
-                return redirect('login')
+                messages.warning(request, f"Status: {user.status.capitalize()}")
+                return redirect('login') 
 
         except Registration.DoesNotExist:
             messages.error(request, "Invalid credentials")
-            return redirect('login')
+            return redirect('login') 
 
     return render(request, "login.html")
 
