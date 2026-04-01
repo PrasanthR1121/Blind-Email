@@ -1,38 +1,48 @@
+from django.shortcuts import render,redirect
+from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login
+
+from django.http import HttpResponse,HttpResponseRedirect
+from django.core.files.storage import FileSystemStorage
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from .models import Registration, Message, Feedback
+
 import MySQLdb 
 import datetime
 import subprocess
-from django.shortcuts import render,redirect
-from django.contrib import messages
-from django.http import HttpResponse,HttpResponseRedirect
-from django.core.files.storage import FileSystemStorage
-from .models import Registration, Message, Feedback
 
-
-from django.contrib import messages
-from django.shortcuts import render, redirect
-
+@login_required
+@never_cache
 def login(request):
     if request.method == "POST":
-        username = request.POST.get("uname")
+        identifier = request.POST.get("uname")
         password = request.POST.get("password")
+        next_url = request.GET.get('next')
 
-        if username == "admin@gmail.com" and password == "admin":
-            messages.success(request, "Welcome, Admin.")
-            return redirect("/userview/")
+        admin_user = authenticate(request, username=identifier, password=password)
+        if admin_user and admin_user.is_superuser:
+            auth_login(request, admin_user)
+            request.session['username'] = admin_user.username 
+            messages.success(request, f"Welcome, Admin {admin_user.username}")
+            return redirect(next_url if next_url else "/adminhome/")
 
         try:
-            user = Registration.objects.get(email_id=username, password=password)
+            user = Registration.objects.get(email_id=identifier, password=password)
             if user.status == "approved":
+                auth_login(request, user) # Optional: if Registration inherits from AbstractUser
                 request.session['username'] = user.email_id
-                messages.success(request, "Login Successful!")
-                return redirect("/userhome/")
+                messages.success(request, f"Welcome back, {user.name}!")
+                return redirect(next_url if next_url else "/userhome/")
             else:
-                messages.warning(request, f"Status: {user.status.capitalize()}")
-                return redirect('login') 
+                messages.warning(request, f"Account {user.status.capitalize()}")
+                return redirect('login')
 
         except Registration.DoesNotExist:
-            messages.error(request, "Invalid credentials")
-            return redirect('login') 
+            # If both checks fail, then show invalid credentials
+            print(F"Debug: Failed login attempt for identifier '{identifier}' with password '{password}'")
+            messages.error(request, "Invalid Credentials")
+            return redirect('login')
 
     return render(request, "login.html")
 
@@ -65,20 +75,7 @@ def reg(request):
             return redirect('reg')
 
     return render(request, "reg.html", {"error": error, "msg": msg})
-
-def adminlogin(request):
-    error=""
-    request.session['username']=""
-    if(request.POST):        
-        username=request.POST.get("uname")
-        request.session['username']=username
-        password=request.POST.get("password")
-        if((username=='admin') and (password=='admin')):
-            return HttpResponseRedirect("/adminhome/")
-        else:
-            error="enter valid email"     
-    return render(request,"adminlogin.html",{"error":error})
-         
+      
 def forgot(request):
     error = ""
 
@@ -414,12 +411,11 @@ def editprofile(request):
         return redirect("/profile/")
 
     return render(request, "editprofile.html", {"data": user}) 
-
+    
 def adminhome(request):
-    if request.session["username"]:
-       return render(request,"adminhome.html")                   
-    else:
-          return HttpResponseRedirect("/login")
+    if not request.session.get('username'):
+        return redirect('/login/') 
+    return render(request, "adminhome.html")
         
 def voice(request):
     return render(request,"voice.html") 

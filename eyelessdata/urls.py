@@ -21,10 +21,10 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('login/',views.login,name='login'),
-    path('message/',views.message,name='message'),
     path('',views.commonhome,name='commonhome'),
+    path('admin/', admin.site.urls), 
+    path('login/', views.login, name='login'),
+    path('message/',views.message,name='message'),
     path('message1/',views.message1,name='message1'),
     path('adminhome/',views.adminhome,name='adminhome'),
     path('userhome/',views.userhome,name='userhome'),
@@ -37,8 +37,7 @@ urlpatterns = [
     path('profile/',views.profile,name='profile'),
     path('editprofile/',views.editprofile,name='editprofile'),
     path('reg/',views.reg,name='reg'),
-    path('userhome/',views.userhome,name='userhome'),
-    path('commonhome/',views.commonhome,name='commonhome'),
+    path('blindemail/',views.commonhome,name='commonhome'),
     path('search/',views.search,name='search'),
     path('forgot/',views.forgot,name='forgot'),
     path('security/',views.security,name='security'),
@@ -48,14 +47,7 @@ urlpatterns = [
     path('logout/',views.logout,name='logout'),
     path('changeimage/',views.changeimage,name='changeimage'),
     path('save/',views.save,name='save'),
-    path('adminlogin/',views.adminlogin,name='adminlogin'),
     path('draft1/',views.draft1,name='draft1'),
     path('draft2/',views.draft2,name='draft2'),
-    
-   
-   
-
-
-
 ]+staticfiles_urlpatterns()
 

@@ -49,7 +49,8 @@ ROOT_URLCONF = 'eyelessdata.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],        
+        'DIRS': [BASE_DIR / "templates"],
+        'APP_DIRS': True,        
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -101,3 +102,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL='/media/'
 MEDIA_ROOT="dataexchange\\static\\media"
+
+LOGIN_URL = 'login'
