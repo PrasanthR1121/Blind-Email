@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 
 from django.http import HttpResponse,HttpResponseRedirect
 from django.core.files.storage import FileSystemStorage
@@ -12,7 +12,6 @@ import MySQLdb
 import datetime
 import subprocess
 
-@login_required
 @never_cache
 def login(request):
     if request.method == "POST":
@@ -24,7 +23,7 @@ def login(request):
         if admin_user and admin_user.is_superuser:
             auth_login(request, admin_user)
             request.session['username'] = admin_user.username 
-            messages.success(request, f"Welcome, Admin {admin_user.username}")
+            messages.success(request, f"Welcome, {admin_user.username}")
             return redirect(next_url if next_url else "/adminhome/")
 
         try:
@@ -412,10 +411,13 @@ def editprofile(request):
 
     return render(request, "editprofile.html", {"data": user}) 
     
+@never_cache
+@login_required(login_url='login')
 def adminhome(request):
     if not request.session.get('username'):
         return redirect('/login/') 
-    return render(request, "adminhome.html")
+    return render(request, "adminhome.html", {
+})
         
 def voice(request):
     return render(request,"voice.html") 
@@ -424,9 +426,12 @@ def commonhome(request):
     return render(request,"commonhome.html")  
 
 def logout(request):
+    auth_logout(request)
     request.session.flush()
-    return render(request, "logout.html")
+    messages.success(request, "You have been logged out!")
+    return redirect("login")
  
+@never_cache
 def userhome(request):
     if not request.session.get('username'):
         return redirect("/login/")
