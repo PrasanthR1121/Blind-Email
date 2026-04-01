@@ -1,3 +1,5 @@
+from urllib import request
+
 from django.shortcuts import render,redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -14,36 +16,109 @@ import subprocess
 
 @never_cache
 def login(request):
+    # PREVENT LOGGED-IN USERS FROM SEEING LOGIN PAGE
+    if request.user.is_authenticated:
+        return redirect('/dashboard/')
+    if request.session.get('username'):
+        return redirect('/dashboard/')
+
     if request.method == "POST":
         identifier = request.POST.get("uname")
         password = request.POST.get("password")
         next_url = request.GET.get('next')
 
+        # 1. Check Admin (Django Superuser)
         admin_user = authenticate(request, username=identifier, password=password)
         if admin_user and admin_user.is_superuser:
             auth_login(request, admin_user)
             request.session['username'] = admin_user.username 
             messages.success(request, f"Welcome, {admin_user.username}")
-            return redirect(next_url if next_url else "/adminhome/")
+            return redirect(next_url if next_url else "/dashboard/")
 
+        # 2. Check Regular User (Custom Registration Table)
         try:
             user = Registration.objects.get(email_id=identifier, password=password)
             if user.status == "approved":
-                auth_login(request, user) # Optional: if Registration inherits from AbstractUser
+                # We use session only for custom users to keep it separate from Admin auth
                 request.session['username'] = user.email_id
                 messages.success(request, f"Welcome back, {user.name}!")
-                return redirect(next_url if next_url else "/userhome/")
+                return redirect(next_url if next_url else "/dashboard/")
             else:
                 messages.warning(request, f"Account {user.status.capitalize()}")
                 return redirect('login')
 
         except Registration.DoesNotExist:
-            # If both checks fail, then show invalid credentials
-            print(F"Debug: Failed login attempt for identifier '{identifier}' with password '{password}'")
             messages.error(request, "Invalid Credentials")
             return redirect('login')
 
     return render(request, "login.html")
+# Original
+# @never_cache
+# def dashboard(request):
+#     # Determine who is logged in
+#     is_admin = request.user.is_authenticated and request.user.is_superuser
+#     user_email = request.session.get('username')
+
+#     if not is_admin and not user_email:
+#         return redirect('login')
+
+#     if is_admin:
+#         # ADMIN DATA: Global platform stats
+#         context = {
+#             "role": "Admin",
+#             "name": request.user.username,
+#             "data1": Registration.objects.count(), # Total Users
+#             "count1": Message.objects.count(),     # Total Messages
+#             "count": Feedback.objects.count(),      # Total Feedback
+#             "det": Message.objects.all().order_by('-id')[:3],
+#             "feed": Feedback.objects.all().order_by('-id')[:3],
+#         }
+#     else:
+#         # USER DATA: Personal stats only
+#         user_obj = Registration.objects.get(email_id=user_email)
+#         context = {
+#             "role": "User",
+#             "name": user_obj.name,
+#             "data1": "Active",
+#             "count": Message.objects.filter(receiver=user_obj).count(), # Personal Inbox
+#             "count1": Message.objects.filter(sender=user_obj).count(),   # Personal Sent
+#             "det": Message.objects.filter(receiver=user_obj).order_by('-id')[:3],
+#             "data": [user_obj],
+#         }
+
+#     return render(request, "dashboard.html", context)
+
+@never_cache
+def dashboard(request):
+
+    is_test_admin = False 
+    
+    if is_test_admin:
+        context = {
+            "role": "Admin",
+            "name": "Prasanth",
+            "data1": 150,          # Simulated Total Users
+            "count": 4200,         # Simulated Global Emails
+            "count1": 15,          # Simulated Pending Feedback
+            "det": ["New user registered: Sneha", "Server backup successful", "Feedback received from User101"],
+            "feed": [1, 2, 3],     # Just for length check
+        }
+    else:
+        context = {
+            "role": "User",
+            "name": "Sneha",
+            "data1": "Approved",    # Account Status
+            "count": 12,            # Personal Inbox
+            "count1": 8,             # Personal Sent
+            "det": ["Meeting request from HR", "Welcome to Blind Email", "Security Alert: Login from Kerala"],
+            "feed": [],             # Empty feed for user
+            "data": [{"image": {"name": ""}}] # Empty image list to trigger the initial 'S'
+        }
+    
+    # Adding a dummy message to test the voice and toastr
+    messages.success(request, f"Welcome back, {context['name']}!")
+    
+    return render(request, "dashboard.html", context)
 
 def reg(request):
     error = ""
@@ -414,55 +489,100 @@ def editprofile(request):
 @never_cache
 @login_required(login_url='login')
 def adminhome(request):
-    if not request.session.get('username'):
-        return redirect('/login/') 
-    return render(request, "adminhome.html", {
-})
-        
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect('userhome')
+
+    total_users = Registration.objects.count()
+    total_messages = Message.objects.count()
+    total_feedback = Feedback.objects.count()
+    
+    recent_messages = Message.objects.order_by('-id')[:3]
+    feed = Feedback.objects.order_by('-id')[:3]
+
+    context = {
+        "data1": total_users,     
+        "count1": total_messages,  
+        "count": total_feedback,   
+        "det": recent_messages,
+        "feed": feed,
+        "role": "Admin"
+    }
+
+    return render(request, "dashboard.html", context)
+
+@never_cache
+@login_required(login_url='login')
+def userhome(request):
+    # if not request.session.get('username'):
+    #     return redirect("/login/")
+
+    # user = Registration.objects.get(email_id=request.session['username'])
+
+    # inbox_count = Message.objects.filter(sendto=user.email_id).count()
+    # total_messages = Message.objects.count()
+    # total_users = Registration.objects.count()
+
+    # recent_messages = Message.objects.filter(
+    #     sendto=user.email_id,
+    #     status="sent"
+    # ).order_by('-id')[:2][::-1]
+
+    # det = []
+    # for msg in recent_messages:
+    #     sender = Registration.objects.filter(email_id=msg.sender).first()
+    #     if sender:
+    #         det.append((sender.name, sender.image))
+
+    # feed = Feedback.objects.order_by('-id')[:3].values_list('complaint', flat=True)
+
+     return render(request, "userhome.html"
+    # {
+    #     "data": [user],
+    #     "count": inbox_count,
+    #     "count1": total_messages,
+    #     "data1": total_users,
+    #     "det": det,
+    #     "feed": feed
+    )
+# @never_cache
+# def userhome(request):
+#     # Security check for custom session
+#     email = request.session.get('username')
+#     if not email:
+#         return redirect('login')
+
+#     # USER LOGIC: Data filtered to THIS user only
+#     user_obj = Registration.objects.get(email_id=email)
+    
+#     # Personal statistics
+#     my_inbox = Message.objects.filter(receiver=user_obj).count()
+#     my_sent = Message.objects.filter(sender=user_obj, status="sent").count()
+#     my_feed = Feedback.objects.filter(sender=user_obj).count()
+    
+#     # Personal recent messages
+#     det = Message.objects.filter(receiver=user_obj).order_by('-id')[:3]
+    
+#     return render(request, "dashboard.html", {
+#         "data1": "Active",         # Placeholder for user view
+#         "count": my_inbox,         # User's personal inbox
+#         "count1": my_sent,         # User's personal sent count
+#         "feed_count": my_feed,
+#         "det": det,
+#         "data": [user_obj],        # For profile info
+#         "role": "User"
+#     })
+  
 def voice(request):
     return render(request,"voice.html") 
 
-def commonhome(request):
-    return render(request,"commonhome.html")  
+def home(request):
+    return render(request,"home.html")  
 
 def logout(request):
     auth_logout(request)
     request.session.flush()
     messages.success(request, "You have been logged out!")
     return redirect("login")
- 
-@never_cache
-def userhome(request):
-    if not request.session.get('username'):
-        return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
-
-    inbox_count = Message.objects.filter(sendto=user.email_id).count()
-    total_messages = Message.objects.count()
-    total_users = Registration.objects.count()
-
-    recent_messages = Message.objects.filter(
-        sendto=user.email_id,
-        status="sent"
-    ).order_by('-id')[:2][::-1]
-
-    det = []
-    for msg in recent_messages:
-        sender = Registration.objects.filter(email_id=msg.sender).first()
-        if sender:
-            det.append((sender.name, sender.image))
-
-    feed = Feedback.objects.order_by('-id')[:3].values_list('complaint', flat=True)
-
-    return render(request, "adminhome.html", {
-        "data": [user],
-        "count": inbox_count,
-        "count1": total_messages,
-        "data1": total_users,
-        "det": det,
-        "feed": feed
-    })
 
 def feedback(request):
     if not request.session.get('username'):
