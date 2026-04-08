@@ -15,7 +15,24 @@
 
     <div class="hero-bg"></div>
 
-    <div id="toast-container" class="toast-container">
+    <div id="toast-container" class="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast-card glass-card" style="margin-bottom: 10px; min-width: 300px; padding: 15px; background: rgba(10, 20, 45, 0.9); border-left: 5px solid {% if message.tags == 'error' %}#ff4d4d{% else %}#00d9ff{% endif %};">
+            <div class="toast-content d-flex align-items-center gap-3">
+                <div class="toast-body">
+                    <div class="toast-title" style="font-weight:700; color:#00d9ff; font-size:0.7rem; text-transform:uppercase;">
+                        {{ message.tags }}
+                    </div>
+                    <div class="toast-msg" style="color:white; font-size:0.85rem;">{{ message }}</div>
+                </div>
+                <button class="toast-close ms-auto" onclick="closeToast(this)" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+<!-- <div id="toast-container" class="toast-container">
         {% if messages %}
         {% for message in messages %}
         <div class="toast-card glass-card">
@@ -43,7 +60,7 @@
         </div>
         {% endfor %}
         {% endif %}
-    </div>
+    </div> -->
 
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="glass-card shadow-lg" style="width: 100%; max-width: 400px; padding: 40px; border-radius: 20px;">

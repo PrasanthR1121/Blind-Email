@@ -16,31 +16,41 @@ import subprocess
 
 @never_cache
 def login(request):
-    # PREVENT LOGGED-IN USERS FROM SEEING LOGIN PAGE
-    if request.user.is_authenticated:
-        return redirect('/dashboard/')
-    if request.session.get('username'):
+    if request.user.is_authenticated or request.session.get('username'):
+        if not request.session.get('tab_alert_shown'):
+            messages.info(request, "Active session detected. Resuming...")
+            request.session['tab_alert_shown'] = True
         return redirect('/dashboard/')
 
     if request.method == "POST":
         identifier = request.POST.get("uname")
         password = request.POST.get("password")
         next_url = request.GET.get('next')
-
-        # 1. Check Admin (Django Superuser)
+        
+        # 2. Try Admin Authentication
         admin_user = authenticate(request, username=identifier, password=password)
         if admin_user and admin_user.is_superuser:
             auth_login(request, admin_user)
+            
+            # Clear old messages (like "Logged Out") before adding new ones
+            storage = messages.get_messages(request)
+            for _ in storage: pass 
+            
             request.session['username'] = admin_user.username 
-            messages.success(request, f"Welcome, {admin_user.username}")
+            request.session['tab_alert_shown'] = True
+            messages.success(request, f"Welcome, Admin {admin_user.username}")
             return redirect(next_url if next_url else "/dashboard/")
 
-        # 2. Check Regular User (Custom Registration Table)
+        # 3. Try Regular User Authentication
         try:
             user = Registration.objects.get(email_id=identifier, password=password)
             if user.status == "approved":
-                # We use session only for custom users to keep it separate from Admin auth
+                # Clear old messages
+                storage = messages.get_messages(request)
+                for _ in storage: pass 
+                
                 request.session['username'] = user.email_id
+                request.session['tab_alert_shown'] = True
                 messages.success(request, f"Welcome back, {user.name}!")
                 return redirect(next_url if next_url else "/dashboard/")
             else:
@@ -52,6 +62,7 @@ def login(request):
             return redirect('login')
 
     return render(request, "login.html")
+
 # Original
 # @never_cache
 # def dashboard(request):
@@ -91,7 +102,7 @@ def login(request):
 @never_cache
 def dashboard(request):
 
-    is_test_admin = False 
+    is_test_admin = True 
     
     if is_test_admin:
         context = {
@@ -114,10 +125,7 @@ def dashboard(request):
             "feed": [],             # Empty feed for user
             "data": [{"image": {"name": ""}}] # Empty image list to trigger the initial 'S'
         }
-    
-    # Adding a dummy message to test the voice and toastr
-    messages.success(request, f"Welcome back, {context['name']}!")
-    
+       
     return render(request, "dashboard.html", context)
 
 def reg(request):
@@ -579,6 +587,9 @@ def home(request):
     return render(request,"home.html")  
 
 def logout(request):
+    storage = messages.get_messages(request)
+    for _ in storage: 
+        pass 
     auth_logout(request)
     request.session.flush()
     messages.success(request, "You have been logged out!")
