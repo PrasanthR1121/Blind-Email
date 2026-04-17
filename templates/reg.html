@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Registration | Blind Email</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,23 +8,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     {% load static %}
     <link href="{% static 'web/css/style.css' %}" rel="stylesheet">
+
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    <script src="{% static 'web/js/reg.js' %}"></script>
 </head>
+
 <body>
 
-<div class="hero-bg"></div>
+    <div class="hero-bg"></div>
 
-<div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
-    
-    <div id="toast-container" class="toast-container">
-    {% if messages %}
-        {% for message in messages %}
+    <div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
+
+        <div id="toast-container" class="toast-container">
+            {% if messages %}
+            {% for message in messages %}
             <div class="toast-card glass-card">
                 <div class="toast-content">
                     <div class="toast-icon">
                         {% if message.tags == 'error' %}
-                            <i class="fa fa-exclamation-circle text-danger"></i>
+                        <i class="fa fa-exclamation-circle text-danger"></i>
                         {% else %}
-                            <i class="fa fa-check-circle text-success"></i>
+                        <i class="fa fa-check-circle text-success"></i>
                         {% endif %}
                     </div>
                     <div class="toast-body">
@@ -34,98 +39,78 @@
                 </div>
                 <div class="toast-progress"></div>
             </div>
-        {% endfor %}
-    {% elif error or msg or msg1 or err %}
-        <div class="toast-card glass-card">
-            <div class="toast-content">
-                <div class="toast-icon">
-                    {% if error or err %} 
-                        <i class="fa fa-exclamation-circle text-danger"></i> 
-                    {% else %} 
-                        <i class="fa fa-check-circle text-success"></i> 
-                    {% endif %}
+            {% endfor %}
+            {% elif error or msg or msg1 or err %}
+            <div class="toast-card glass-card">
+                <div class="toast-content">
+                    <div class="toast-icon">
+                        {% if error or err %}
+                        <i class="fa fa-exclamation-circle text-danger"></i>
+                        {% else %}
+                        <i class="fa fa-check-circle text-success"></i>
+                        {% endif %}
+                    </div>
+                    <div class="toast-body">
+                        <div class="toast-title">System Notification</div>
+                        <div class="toast-msg">{{error}} {{msg}} {{msg1}} {{err}}</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast(this)">&times;</button>
                 </div>
-                <div class="toast-body">
-                    <div class="toast-title">System Notification</div>
-                    <div class="toast-msg">{{error}} {{msg}} {{msg1}} {{err}}</div>
-                </div>
-                <button class="toast-close" onclick="closeToast(this)">&times;</button>
+                <div class="toast-progress"></div>
             </div>
-            <div class="toast-progress"></div>
+            {% endif %}
         </div>
-    {% endif %}
-</div>
 
-    <div class="glass-card shadow-lg">
-        <h2 class="title text-center mb-4" style="font-size: 2rem;">Register Now</h2>
-        
-        <form action="#" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <input type="text" class="form-control mb-3" name="name" pattern="[a-zA-Z\s]{2,20}" placeholder="NAME" required>
-            
-            <textarea rows="3" class="form-control mb-3" name="address" placeholder="ADDRESS" required></textarea>     
-            
-            <div class="text-start mb-2 small opacity-75">Date of Birth</div>
-            <input type="date" class="form-control mb-3" name="dob" min="1800-01-01" max="2015-12-30" required>
-            
-            <div class="d-flex gap-4 mb-3 justify-content-center">
-                <label class="form-check-label">
-                    <input type="radio" name="gender" value="male" checked> Male
-                </label>
-                <label class="form-check-label">
-                    <input type="radio" name="gender" value="female"> Female
-                </label>
+        <div class="glass-card shadow-lg">
+            <h2 class="title text-center mb-4" style="font-size: 2rem;">REGISTER NOW</h2>
+
+            <form action="#" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <input type="text" class="form-control mb-3" name="name" pattern="[a-zA-Z\s]{2,20}" placeholder="NAME"
+                    required>
+
+                <textarea rows="3" class="form-control mb-3" name="address" placeholder="ADDRESS" required></textarea>
+
+                <div class="text-start mb-2 small opacity-75">Date of Birth</div>
+                <input type="date" class="form-control mb-3" id="dob" name="dob" min="1900-01-01" required>
+
+                <div class="d-flex gap-4 mb-3 justify-content-center">
+                    <label class="form-check-label">
+                        <input type="radio" name="gender" value="male" checked> Male
+                    </label>
+                    <label class="form-check-label">
+                        <input type="radio" name="gender" value="female"> Female
+                    </label>
+                </div>
+
+                <input type="email" class="form-control mb-3" name="email" placeholder="E-MAIL" required>
+                <input type="tel" class="form-control mb-3" name="mobile" pattern="[6-9]{1}[0-9]{9}" placeholder="PHONE"
+                    required>
+
+                <div class="text-start mb-2 small opacity-75">Profile Image</div>
+                <input type="file" class="form-control mb-3" name="img">
+
+                <input type="password" class="form-control mb-3" name="password" placeholder="PASSWORD" required>
+                <input type="password" class="form-control mb-3" name="cpassword" placeholder="CONFIRM PASSWORD"
+                    required>
+
+                <input type="text" class="form-control mb-3" value="Security Question: Favourite Color" disabled>
+                <input type="text" class="form-control mb-4" name="answer" placeholder="YOUR ANSWER" required>
+
+                <div class="mb-4 small">
+                    <input type="checkbox" required> I agree to the Terms & Privacy
+                </div>
+
+                <input type="submit" value="Register" class="btn btn-custom w-100 mb-3" name="register">
+            </form>
+
+            <div class="mt-4 text-center">
+                <p class="small">Already Registered? <a href="/login/" class="text-info">Login</a></p>
+                <p class="small"><a href="/blindemail/" class="opacity-50 text-light">Go back home</a></p>
             </div>
-
-            <input type="email" class="form-control mb-3" name="email" placeholder="E-MAIL" required>
-            <input type="tel" class="form-control mb-3" name="mobile" pattern="[6-9]{1}[0-9]{9}" placeholder="PHONE" required>
-            
-            <div class="text-start mb-2 small opacity-75">Profile Image</div>
-            <input type="file" class="form-control mb-3" name="img">
-            
-            <input type="password" class="form-control mb-3" name="password" placeholder="PASSWORD" required>
-            <input type="password" class="form-control mb-3" name="cpassword" placeholder="CONFIRM PASSWORD" required>
-            
-            <input type="text" class="form-control mb-3" value="Security Question: Favourite Color" disabled>
-            <input type="text" class="form-control mb-4" name="answer" placeholder="YOUR ANSWER" required>
-
-            <div class="mb-4 small">
-                <input type="checkbox" required> I agree to the Terms & Privacy
-            </div>
-            
-            <input type="submit" value="Register" class="btn btn-custom w-100 mb-3" name="register">
-        </form>
-        
-        <div class="mt-4 text-center">
-            <p class="small">Already Registered? <a href="/login/" class="text-info">Login</a></p>
-            <p class="small"><a href="/blindemail/" class="opacity-50 text-light">Go back home</a></p>
         </div>
     </div>
-</div>
-
-<script>
-    function closeToast(btn) {
-        let toast = btn.closest('.toast-card');
-        toast.style.transform = "translateX(120%)";
-        toast.style.transition = "0.5s ease";
-        setTimeout(() => toast.remove(), 2000);
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const toasts = document.querySelectorAll('.toast-card');
-        toasts.forEach(toast => {
-            setTimeout(() => {
-                if(toast) {
-                    toast.style.transform = "translateX(120%)";
-                    toast.style.transition = "0.5s ease";
-                    toast.style.opacity = "0";
-                    setTimeout(() => toast.remove(), 2000);
-                }
-            }, 2500);
-        });
-    });
-</script>
-
 </body>
+
 </html>

@@ -33,4 +33,4 @@ class Feedback(models.Model):
     date = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return self.subject
+        return f"Feedback from {self.sender.email_id} - {self.subject}"

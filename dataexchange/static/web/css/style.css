@@ -4,20 +4,22 @@ body {
     background: #050a18;
     color: white;
 }
+/* --- Hero Background --- */
 
 .hero-bg {
+
     position: fixed;
+
     inset: 0;
-    background: linear-gradient(
-        -45deg,
-        #050a18,
-        #0f172a,
-        #1e1b4b,
-        #312e81
-    );
+
+    background: linear-gradient(-45deg, #050a18, #0f172a, #1e1b4b, #312e81);
+
     background-size: 300% 300%;
+
     animation: gradientMove 12s ease infinite;
+
     z-index: -1;
+
 }
 
 @keyframes gradientMove {

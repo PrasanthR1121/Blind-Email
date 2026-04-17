@@ -25,7 +25,6 @@
             overflow-x: hidden;
         }
 
-        /* Sidebar - Pinned to left */
         .sidebar { 
             height: 100vh; 
             background: rgba(0, 0, 0, 0.2); 
@@ -69,10 +68,8 @@
             color: #ff4d4d !important;
         }
 
-        /* Content Area Offset */
         main { margin-left: 240px; }
 
-        /* Glass Cards */
         .glass-card { 
             background: var(--glass); 
             backdrop-filter: blur(15px); 
@@ -93,7 +90,6 @@
         .stat-red { border-left-color: #ff4d4d; }
         .stat-orange { border-left-color: #ffaa00; }
 
-        /* Toastr Styling */
         #toast-container { position: fixed; top: 25px; right: 25px; z-index: 10000; }
         .toast-card {
             background: rgba(10, 20, 45, 0.9);
@@ -119,7 +115,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <small class="d-block text-info fw-bold text-uppercase" style="font-size: 10px;">{{ message.tags }}</small>
-                    <span class="text-white">{{ message }}</span>
+                    <span class="text-white django-msg">{{ message }}</span>
                 </div>
                 <button class="btn-close btn-close-white ms-3" onclick="document.getElementById('toast-{{ forloop.counter }}').remove()"></button>
             </div>
@@ -134,7 +130,6 @@
                 <a href="{% url 'dashboard' %}" class="brand-logo">BLIND EMAIL</a>
                 <div class="nav flex-column w-100">
                     <a class="nav-link active" href="{% url 'dashboard' %}"><i class="fa fa-th-large"></i> Dashboard</a>
-                    
                     {% if role == 'Admin' %}
                         <a class="nav-link" href="{% url 'userview' %}"><i class="fa fa-users"></i> Users</a>
                         <a class="nav-link" href="{% url 'viewfeedback' %}"><i class="fa fa-comment-dots"></i> Feedback</a>
@@ -143,16 +138,14 @@
                         <a class="nav-link" href="{% url 'message' %}"><i class="fa fa-paper-plane"></i> Compose</a>
                         <a class="nav-link" href="{% url 'feedback' %}"><i class="fa fa-bullhorn"></i> Feedback</a>
                     {% endif %}
-                    
                     <a class="nav-link logout-link" href="{% url 'logout' %}"><i class="fa fa-sign-out-alt"></i> Logout</a>
                 </div>
             </nav>
 
             <main class="col px-5 py-4">
-                
                 <div class="d-flex justify-content-between align-items-end mb-5">
                     <div>
-                        <h2 class="fw-bold mb-0">Hey, {{ name }} 👋</h2>
+                        <h2 class="fw-bold mb-0">Hey, {{ name }}</h2>
                         <p class="text-white-50">Viewing your <b>{{ role }}</b> dashboard analytics</p>
                     </div>
                     
@@ -161,11 +154,7 @@
                             <div class="fw-bold small">{{ name }}</div>
                             <div class="text-white-50" style="font-size: 10px;">{{ role }} Account</div>
                         </div>
-                        {% if role == 'User' and data.0.image %}
-                             <img src="{% static data.0.image.name %}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                        {% else %}
-                            <div style="width:40px; height:40px; background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple)); border-radius:50%; display:grid; place-items:center; font-weight:bold;">{{ name|first|upper }}</div>
-                        {% endif %}
+                        <div style="width:40px; height:40px; background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple)); border-radius:50%; display:grid; place-items:center; font-weight:bold;">{{ name|first|upper }}</div>
                     </div>
                 </div>
 
@@ -201,12 +190,10 @@
                         <div class="glass-card">
                             <div class="d-flex justify-content-between mb-4">
                                 <h5 class="fw-bold">{% if role == 'Admin' %}Recent Users{% else %}Recent Messages{% endif %}</h5>
-                                <a href="#" class="text-info small text-decoration-none">View All →</a>
                             </div>
-                            
-                            <div class="text-center py-5 text-white-50">
+                            <div class="text-start py-2">
                                 {% if det %}
-                                    <div class="list-group list-group-flush bg-transparent text-start">
+                                    <div class="list-group list-group-flush bg-transparent">
                                         {% for item in det %}
                                             <div class="list-group-item bg-transparent text-white border-white-10 px-0">
                                                 <i class="fa fa-circle text-info me-2" style="font-size: 8px;"></i> {{ item }}
@@ -214,8 +201,7 @@
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    <i class="fa fa-folder-open fa-3x mb-3 opacity-20"></i>
-                                    <p>No activity records found</p>
+                                    <p class="text-white-50">No activity records found</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -244,15 +230,32 @@
     <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
     <script>
         $(document).ready(function() {
-            // Auto-hide toast
+            // 1. Auto-hide toasts
             setTimeout(() => {
                 $('.toast-card').fadeOut(600, function() { $(this).remove(); });
-            }, 3500);
+            }, 5000);
 
-            // Voice Intro
-            {% if messages %}
-                responsiveVoice.speak("Welcome back {{ name }}. Everything looks good.");
+            let notification = $(".django-msg").first().text().trim();
+            let welcomeSpeech = "Welcome back {{ name }}. You are on your {{ role }} dashboard. ";
+            
+            if (notification) {
+                welcomeSpeech += "Notification: " + notification + ". ";
+            }
+
+            {% if role == 'Admin' %}
+                welcomeSpeech += "There are currently {{ data1 }} registered users on the platform.";
+            {% else %}
+                welcomeSpeech += "You have {{ count }} messages in your inbox and {{ count1 }} sent items.";
             {% endif %}
+
+            responsiveVoice.speak(welcomeSpeech, "UK English Female", {rate: 0.9});
+        });
+
+        // 3. Quick Navigation Keyboard Listeners
+        $(document).keydown(function(e) {
+            if (e.key.toLowerCase() === 'i') window.location.href = "{% url 'inbox' %}";
+            if (e.key.toLowerCase() === 'c') window.location.href = "{% url 'message' %}";
+            if (e.key.toLowerCase() === 'l') window.location.href = "{% url 'logout' %}";
         });
     </script>
 </body>
