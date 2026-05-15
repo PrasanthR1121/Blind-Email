@@ -97,7 +97,6 @@ def logout(request):
     messages.success(request, "You have been logged out successfully. Returning to login page.")
     return redirect("login")
 
-
 # ─────────────────────────────────────────────
 # REGISTRATION
 # ─────────────────────────────────────────────
@@ -283,10 +282,22 @@ def inbox(request):
         return redirect("/login/")
 
     _clear_messages(request)
-    user = Registration.objects.get(email_id=request.session['username'])
-    msgs = Message.objects.filter(receiver=user, status="sent").order_by("-id")
-    count = msgs.count()
+    try:
+        if request.user.is_authenticated and request.user.is_superuser:
+            user_name = request.user.username
+            role = "Admin"
+            msgs = Message.objects.filter(status="sent").order_by("-id")
+        else:
+            user_obj = Registration.objects.get(email_id=request.session['username'])
+            user_name = user_obj.name
+            role = "User"
+            msgs = Message.objects.filter(receiver=user_obj, status="sent").order_by("-id")
 
+    except Registration.DoesNotExist:
+        request.session.flush()
+        return redirect('login')
+
+    count = msgs.count()
     if count == 0:
         messages.info(request, "Your inbox is empty. No new messages.")
     else:
@@ -296,8 +307,13 @@ def inbox(request):
             f"Use Tab to navigate each message."
         )
 
-    return render(request, "inbox.html", {"data": msgs})
-
+    context = {
+        "data": msgs,
+        "role": role,
+        "name": user_name,
+        "data1": msgs.count(), # Inbox count
+    }
+    return render(request, "inbox.html", context)
 
 # ─────────────────────────────────────────────
 # COMPOSE / SEND
@@ -320,25 +336,33 @@ def message(request):
 
         if receiver:
             subject = request.POST.get("subject", "")
+            status = "draft" if "draft" in request.POST else "sent"
             Message.objects.create(
                 sender   = user,
                 receiver = receiver,
                 subject  = subject,
                 content  = request.POST.get("content"),
-                status   = "sent"
+                status   = status
             )
-            messages.success(
-                request,
-                f"Your message with subject '{subject}' has been sent successfully to {receiver.name}."
-            )
-            return redirect("/inbox/")
+            if status == "draft":
+                messages.info(request, "Your message has been saved as a draft.")
+                return redirect("/draft/")
+            else:
+                messages.success(
+                    request,
+                    f"Your message with subject '{subject}' has been sent successfully to {receiver.name}."
+                )
+                return redirect("/sent/")
         else:
             messages.error(
                 request,
                 "Recipient not found. Please check the email address and try again."
             )
 
-    return render(request, "message.html")
+    return render(request, "message.html", {
+        "role": "User",
+        "name": user.name,
+    })
 
 
 def save(request):
@@ -391,12 +415,15 @@ def compose(request):
         return redirect("/inbox/")
 
     request.session['reply_to'] = msg_obj.sender.email_id
+    current_user = Registration.objects.get(email_id=request.session['username'])
 
     return render(request, "compose.html", {
         "frm1":    msg_obj.sender.email_id,
         "sub":     msg_obj.subject,
         "con":     msg_obj.content,
         "sender":  msg_obj.sender.name,
+        "role":    "User",
+        "name":    current_user.name,
     })
 
 
@@ -427,7 +454,9 @@ def message1(request):
 
     return render(request, "message1.html", {
         "frm1": request.session.get('reply_to', ''),
-        "data": users
+        "data": users,
+        "role": "User",
+        "name": user.name,
     })
 
 
@@ -481,7 +510,11 @@ def sent(request):
     else:
         messages.info(request, f"You have {count} sent message{'s' if count != 1 else ''}.")
 
-    return render(request, "sent.html", {"data": sent_msgs})
+    return render(request, "sent.html", {
+        "data": sent_msgs,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 # ─────────────────────────────────────────────
@@ -507,7 +540,11 @@ def draft(request):
     else:
         messages.info(request, f"You have {count} saved draft message{'s' if count != 1 else ''}.")
 
-    return render(request, "draft.html", {"data": drafts})
+    return render(request, "draft.html", {
+        "data": drafts,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 def draft1(request):
@@ -527,7 +564,9 @@ def draft1(request):
     return render(request, "draft1.html", {
         "frm1": msg_obj.receiver.email_id,
         "sub":  msg_obj.subject,
-        "con":  msg_obj.content
+        "con":  msg_obj.content,
+        "role": "User",
+        "name": Registration.objects.get(email_id=request.session['username']).name,
     })
 
 
@@ -568,7 +607,9 @@ def draft2(request):
         "frm1": request.session.get('frm1', ''),
         "sub":  request.session.get('sub', ''),
         "con":  request.session.get('con', ''),
-        "data": Registration.objects.all()
+        "data": Registration.objects.all(),
+        "role": "User",
+        "name": user.name,
     })
 
 
@@ -592,7 +633,11 @@ def userview(request):
         messages.success(request, f"User status has been updated to {status}.")
 
     users = Registration.objects.all().order_by('-id')
-    return render(request, "userview.html", {"data": users})
+    return render(request, "userview.html", {
+        "data": users,
+        "role": "Admin",
+        "name": request.session.get('username', 'Admin'),
+    })
 
 
 # ─────────────────────────────────────────────
@@ -608,7 +653,11 @@ def profile(request):
         return redirect("/login/")
 
     user = Registration.objects.get(email_id=request.session['username'])
-    return render(request, "profile.html", {"data": user})
+    return render(request, "profile.html", {
+        "data": user,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 def editprofile(request):
@@ -630,7 +679,11 @@ def editprofile(request):
         messages.success(request, "Your profile has been updated successfully.")
         return redirect("/profile/")
 
-    return render(request, "editprofile.html", {"data": user})
+    return render(request, "editprofile.html", {
+        "data": user,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 def changeimage(request):
@@ -674,12 +727,15 @@ def feedback(request):
         Feedback.objects.create(
             sender    = user,
             subject   = request.POST.get("subject"),
-            complaint = request.POST.get("mycontent"),
+            message   = request.POST.get("mycontent"),
             date      = datetime.date.today()
         )
         messages.success(request, "Thank you. Your feedback has been submitted successfully.")
 
-    return render(request, "feedback.html")
+    return render(request, "feedback.html", {
+        "role": "User",
+        "name": user.name,
+    })
 
 
 def viewfeedback(request):
@@ -699,7 +755,11 @@ def viewfeedback(request):
     else:
         messages.info(request, f"{count} feedback submission{'s' if count != 1 else ''} found.")
 
-    return render(request, "viewfeedback.html", {"data": data})
+    return render(request, "viewfeedback.html", {
+        "data": data,
+        "role": "Admin",
+        "name": request.session.get('username', 'Admin'),
+    })
 
 
 # ─────────────────────────────────────────────

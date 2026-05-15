@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Registration, Message, Feedback
 
-# Register your models here.
+admin.site.register(Registration)
+admin.site.register(Message)    
+admin.site.register(Feedback)

@@ -1,51 +1,53 @@
-{% extends 'admin.html' %}
+{% extends 'base.html' %}
 
-{% block content  %}
-<body>
-<section id="main-content" style="margin-left:30px;>
-        <section class="wrapper" align="center">
-            <div class="typo-agile" >
-            <h2 class="w3ls_head">FEEDBACK</h2>
-    
-    <div class="bs-docs-example" >
-    
-                   
-                    
-        <table class="table table-striped" cellpadding="5" cellspacing="5" width="500px" >
+{% block title %}Feedback{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold m-0">Feedback</h2>
+        <p class="text-white-50">Feedback submitted by registered users</p>
+    </div>
+
+    <div class="glass-card">
+        {% if data %}
+        <table class="table custom-table">
             <thead>
-            <tr>
-                <td><b>ID</b></td>
-                <td><b>FROM</b></td>
-                <td><b>DATE</b></td>
-                <td><b>SUBJECT</b></td>
-                <td><b>FEEDBACK</b></td>
-                
-                
-                
-
-            </tr>
-        </thead>
-            {% for d in data %}
-            <tr>
-                <td>{{d.0}}</td>
-                <td>{{d.1}}</td>
-                <td>{{d.3}}</td>
-                <td>{{d.4}}</td>
-                <td>{{d.5}}</td>
-        
-
-            </tr>
-            {% endfor %}
-
-
-
+                <tr>
+                    <th>No</th>
+                    <th>User</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr tabindex="0" data-summary="Feedback {{ forloop.counter }} from {{ item.sender.name }}. Subject {{ item.subject }}.">
+                    <td class="text-info fw-bold">#{{ forloop.counter }}</td>
+                    <td>{{ item.sender.name }}<span class="d-block text-white-50 small">{{ item.sender.email_id }}</span></td>
+                    <td>{{ item.subject }}</td>
+                    <td>{{ item.message }}</td>
+                    <td>{{ item.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
-        
-    </div>    
-    
-</div>
+        {% else %}
+        <div class="text-center py-5 text-white-50">No feedback submissions found.</div>
+        {% endif %}
+    </div>
 </div>
 
-</section>
-</body>
-{% endblock %}  
+<script>
+    $(document).ready(function () {
+        $('tr[data-summary]').on('focus mouseenter', function () {
+            speak($(this).data('summary'));
+        });
+    });
+</script>
+{% endblock %}
+
+{% block speech_script %}
+speak("Feedback list loaded. {{ data|length }} feedback submissions found.");
+{% endblock %}

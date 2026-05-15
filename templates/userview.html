@@ -1,62 +1,156 @@
-{% extends 'admin.html' %}
+{% extends 'base.html' %}
 
-{% block content  %}
-<body>
-<section id="main-content" style="margin-left:30px;">
-    <section class="wrapper" align="center">
-        <div class="typo-agile" >
-        <h2 class="w3ls_head">USER DETAILS</h2>
+{% block content %}
+<style>
 
-<div class="bs-docs-example" >
+::-webkit-scrollbar {
+    width: 6px;                
+    height: 6px;              
+}
 
-               
-     <form method="POST">           
-    <table class="table table-striped" cellpadding="5" cellspacing="5" width="500px" >
-        <thead>    
-            <tr>
-                <td><b>ID</b></td>
-                <td><b>NAME</b></td>
-                <td><b>ADDRESS</b></td>
-                <td><b>DOB</b></td>
-                <td><b>GENDER</b></td>
-                <td><b>EMAIL</b></td>
-                <td><b>MOBILE</b></td>
-                <td><b>VERIFICATION</b></td>
-                
-                
-                
+::-webkit-scrollbar-track {
+    background: var(--bg-dark); 
+}
 
-            </tr>
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 217, 255, 0.2); 
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);       
+    box-shadow: 0 0 10px var(--neon-blue);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 217, 255, 0.2) var(--bg-dark);
+}
+
+    .custom-table {
+        font-size: 0.8rem !important;
+        color: white !important;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+        background: transparent !important;
+        width: 100%;
+    }
+
+    .custom-table thead th {
+        background: transparent !important;
+        color: var(--neon-blue) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1.5px;
+        padding: 15px;
+        border: none !important;
+    }
+
+    .custom-table tbody tr {
+        background: rgba(255, 255, 255, 0.03) !important;
+        transition: 0.3s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        transform: translateY(-2px);
+    }
+
+    .custom-table td {
+        background: transparent !important;
+        padding: 15px !important;
+        border-top: 1px solid var(--glass-border) !important;
+        border-bottom: 1px solid var(--glass-border) !important;
+        vertical-align: middle;
+        color: white !important;
+    }
+
+    .id-column {
+        color: var(--neon-blue) !important;
+        font-weight: 600;
+    }
+
+    .status-pill {
+        border: 1px solid var(--neon-blue);
+        color: var(--neon-blue);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .custom-table td:first-child {
+        border-left: 1px solid var(--glass-border) !important;
+        border-radius: 12px 0 0 12px;
+    }
+
+    .custom-table td:last-child {
+        border-right: 1px solid var(--glass-border) !important;
+        border-radius: 0 12px 12px 0;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="mb-5">
+        <h2 class="fw-bold m-0 text-white" style="letter-spacing: 1px;">USER DETAILS</h2>
+        <p class="text-white-50">Manage and oversee registered accounts</p>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table custom-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>DOB</th>
+                    <th>Gender</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th class="text-center">Status</th>
+                </tr>
             </thead>
-            {% for d in data %}
-            
-            <tr>
-                <td>{{d.0}}</td>
-                <td>{{d.1}}</td>
-                <td>{{d.2}}</td>
-                <td>{{d.3}}</td>
-                <td>{{d.4}}</td>
-                <td>{{d.5}}</td>
-                <td>{{d.6}}</td>
-                <td><a href="/userview/?id={{d.0}}&status=approved">Approve</a>
-                    <a href="/userview/?id={{d.0}}&status=rejected">Reject</a>
-                </td>
-                
-
-            </tr>
-            
-            {% endfor %}
-
-
-
+            <tbody>
+                {% if data %}
+                {% for i in data %}
+                <tr>
+                    <td class="id-column">#{{ i.id }}</td>
+                    <td class="user-name">{{ i.name }}</td>
+                    <td class="address-text">{{ i.address }}</td>
+                    <td>{{ i.dob }}</td>
+                    <td>{{ i.gender }}</td>
+                    <td style="font-size: 0.8rem;">{{ i.email_id }}</td>
+                    <td style="font-size: 0.8rem;">{{ i.mobile }}</td>
+                    <td class="text-center">
+                        <span class="status-pill">{{ i.status }}</span>
+                        <div class="mt-2">
+                            <a class="btn btn-sm btn-outline-info"
+                                href="{% url 'userview' %}?id={{ i.id }}&status=approved">Approve</a>
+                            <a class="btn btn-sm btn-outline-danger"
+                                href="{% url 'userview' %}?id={{ i.id }}&status=blocked">Block</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr class="empty-row">
+                    <td colspan="8" class="text-center py-5">
+                        <div class="glass-card d-inline-block p-4" style="background: rgba(255,255,255,0.02);">
+                            <i class="fa-regular fa-face-frown d-block mb-3"
+                                style="font-size: 2rem; color: var(--neon-blue);"></i>
+                            <p class="m-0 text-white-50">No users found in the system yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
         </table>
-        </form>
-        
-    </div>    
-    
+    </div>
 </div>
-</div>
+{% endblock %}
 
-</section>
-</body>
-{% endblock %}  
+{% block speech_script %}
+speak("User details page ready. Current user count is {{ data|length }}.");
+{% endblock %}

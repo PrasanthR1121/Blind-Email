@@ -1,235 +1,114 @@
-{% extends 'base2.html' %}
-{% load static %}
-{% block msg %}
-{% for d in det %}
-                <li>
-                    <a href="/inbox/">
-                        <span class="photo"><img  src="{% static d.1 %}"></span>
-                                <span class="subject">
-                                <span class="from">{{d.0}}</span>
-                                
-                                </span>
-                            
-                    </a>
-				</li>
-				{% endfor %}
-{% endblock%}
-{% block feed %}
-{% for f in feed %}
-				<li>
-                    <a href="/feedback/">
-                        <div class="task-info clearfix">
-                            <div class="desc pull-left">
-                                <h5>{{f.0}}</h5>
-                                <p></p>
-                            </div>
-                                    <span class="notification-pie-chart pull-right" data-percent="45">
-                            <span class="percent"></span>
-                            </span>
-                        </div>
-                    </a>
-                </li>
-            	{% endfor %}    
-{% endblock%}
-{% block prof %}
-{% for d in data %}
-<img alt="" src="{% static d.7%}" style="width:50px;height:50px">
-<span class="username">{{d.1}}</span>
-{% endfor%}
-{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Feedback{% endblock %}
+
 {% block content %}
+<style>
+    .feedback-input {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid var(--glass-border) !important;
+        color: white !important;
+        border-radius: 10px;
+    }
 
-    <form method="POST">
-            <div class="col-sm-9 mail-w3agile">
-                    <section class="panel">
-                        <header class="panel-heading wht-bg">
-                           <h4 class="gen-case"> Send Feedback
-                               <form action="#" class="pull-right mail-src-position">
-                                <div class="input-append">
-                                    
-                                </div>
-                            </form>
-                           </h4>
-                        </header>
-                        <div class="panel-body">
-                            
-                            <div class="compose-mail">
-                                <form role="form-horizontal" method="post">
-                                        {% csrf_token %}
-                                   
-    
-                                    
-    
-                                    <div class="form-group">
-                                        <label for="subject" class="">Subject:</label>
-                                        <input type="text" tabindex="1" id="subject" name="subject" class="form-control">
-                                    </div>
-    
-                                    <div class="compose-editor">
-                                        <textarea class="wysihtml5 form-control" name="mycontent" id="mycontent" rows="9"></textarea>
-                                        
-                                    </div>
-                                    <div class="compose-btn">
-                                        <button class="btn btn-primary btn-sm" name="send"><i class="fa fa-check"></i> Send</button>
-                                        
-                                    </div>
-    
-                                </form>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-        </form> 
-        <script src="js/ie6-transparency.js"></script>
-                        <script src="http://responsivevoice.org/responsivevoice/responsivevoice.js"></script>
-                       <script src="../static/attainment/js/jquery-2.2.3.min.js"></script>
-                       <script src="js/jquery.tabify.js" type="text/javascript" charset="utf-8"></script>
+    .feedback-input:focus {
+        border-color: var(--neon-blue) !important;
+        box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+    }
+</style>
 
-                                   
-            
-            <script type="text/javascript">
-                // Test browser support
-                debugger;
-                var flag_to = 0;
-                var flag_sub = 0;
-                var flag_content =0;
-                window.SpeechRecognition = window.SpeechRecognition ||
-                                               window.webkitSpeechRecognition ||
-                                               null;
-                if (window.SpeechRecognition === null) {
-                    document.getElementById('ws-unsupported').classList.remove('hidden');
-                    document.getElementById('button-play-ws').setAttribute('disabled', 'disabled');
-                    document.getElementById('button-stop-ws').setAttribute('disabled', 'disabled');
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold m-0">Send Feedback</h2>
+        <p class="text-white-50">Use voice commands: subject, feedback, read subject, read feedback, send, clear.</p>
+    </div>
+
+    <div class="glass-card">
+        <form method="post" id="feedbackForm">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="subject" class="form-label text-info text-uppercase small fw-bold">Subject</label>
+                <input type="text" id="subject" name="subject" class="form-control form-control-lg feedback-input" required>
+            </div>
+
+            <div class="mb-4">
+                <label for="mycontent" class="form-label text-info text-uppercase small fw-bold">Feedback Details</label>
+                <textarea name="mycontent" id="mycontent" rows="10" class="form-control feedback-input" required></textarea>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 justify-content-end">
+                <button type="reset" class="btn btn-outline-light" id="clearFeedback">
+                    <i class="fa fa-rotate-left me-2"></i>Clear
+                </button>
+                <button type="submit" class="btn btn-outline-info">
+                    <i class="fa fa-paper-plane me-2"></i>Send
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        let activeField = "feedback";
+        const subject = $('#subject');
+        const feedback = $('#mycontent');
+
+        function appendText(text) {
+            const field = activeField === "subject" ? subject : feedback;
+            field.val((field.val() + " " + text).trim());
+        }
+
+        $('#clearFeedback').on('click', function () {
+            speak("Feedback form cleared.");
+        });
+
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        if (!window.SpeechRecognition) {
+            speak("Speech recognition is not available in this browser.");
+            return;
+        }
+
+        const recognizer = new window.SpeechRecognition();
+        recognizer.continuous = true;
+        recognizer.interimResults = false;
+
+        recognizer.onresult = function (event) {
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const spokenText = event.results[i][0].transcript;
+                const command = $.trim(spokenText).toLowerCase();
+
+                if (command === "subject") {
+                    activeField = "subject";
+                    speak("Please say the feedback subject.");
+                } else if (command === "feedback" || command === "body") {
+                    activeField = "feedback";
+                    speak("Please say your feedback.");
+                } else if (command === "read subject") {
+                    speak(subject.val() || "Subject is empty.");
+                } else if (command === "read feedback" || command === "read body") {
+                    speak(feedback.val() || "Feedback is empty.");
+                } else if (command === "send" || command === "submit") {
+                    speak("Submitting feedback.");
+                    $('#feedbackForm').submit();
+                } else if (command === "clear") {
+                    $('#feedbackForm')[0].reset();
+                    speak("Feedback form cleared.");
+                } else if (command === "home" || command === "dashboard") {
+                    window.location.href = "{% url 'dashboard' %}";
+                } else if (command === "logout") {
+                    window.location.href = "{% url 'logout' %}";
                 } else {
-                    var recognizer = new window.SpeechRecognition();
-                    var transcription = document.getElementById('mycontent');
-                   // var txt_to = document.getElementById('txt_to');
-                    var subject = document.getElementById('subject');
-                    //var log = document.getElementById('log');
-           
-                    // Recogniser doesn't stop listening even if the user pauses
-                    recognizer.continuous = true;
-                    // Start recognising
-                    recognizer.onresult = function (event) {
-                        //transcription.textContent = '';
-                        debugger;
-           
-                        for (var i = event.resultIndex; i < event.results.length; i++) {
-                            var flag_val = $.trim(event.results[i][0].transcript);
-                            if (flag_val == "Send" || flag_val == "send" || flag_val == "Sent" || flag_val=="sent") {
-                                var msg = $('#mycontent').val();
-                               // var to = $('#txt_to').val();
-                                var sub = $('#subject').val();
-                                responsiveVoice.speak('Feedback Send Successfully');
-                                window.location.href = "/feedback/?msg='" + msg + "'&sub='"+sub+"'";
-                            }
-                            if (flag_val == "To" || flag_val == "to" || flag_val == 2 || flag_val == "RTU" || flag_val == "destination" || flag_val == "Destination") {
-                                flag_to = 1;
-                                flag_sub = 0;
-                                flag_content = 0;
-                                responsiveVoice.speak('Please say destination');
-                            }
-                            else if (flag_val == "Subject" || flag_val == "subject") {
-                                flag_sub = 1;
-                                flag_to = 0;
-                                flag_content = 0;
-                                responsiveVoice.speak('Please say subject');
-                            }
-                            else if (flag_val == "feedback" || flag_val == "feedback") {
-                                flag_content = 1;
-                                flag_to = 0;
-                                flag_sub = 0;
-                                responsiveVoice.speak('Please say mail feedback');
-                            }
-                            else if (flag_val == "read body" || flag_val == "body") {
-                                var ss = $('#mycontent').val();
-                                responsiveVoice.speak(ss);
-                            }
-                            else if (flag_val == "read destination" || flag_val == "body") {
-                                var ss = $('#txt_to').val();
-                                responsiveVoice.speak(ss);
-                            }
-                            else if (flag_val == "read subject" || flag_val == "body") {
-                                var ss = $('#subject').val();
-                                responsiveVoice.speak(ss);
-                            }
-                            else if (flag_val == "Home" || flag_val == "home") {
-                                window.location.href = "/userhome/";
-                            }
-                            else if (flag_val == "Cleare" || flag_val == "cleare" || flag_val == "clear" || flag_val == "clear all") {
-                                $('#txt_to').val('');
-                                $('#subject').val('');
-                                $('#mycontent').val('');
-                            }
-                            else if (flag_val == "Cleare to" || flag_val == "cleare 2" || flag_val == "clear to" || flag_val == "clear destination") {
-                                $('#txt_to').val('');                    
-                           }
-                            else if (flag_val == "Cleare subject" || flag_val == "clear subject" || flag_val == "clear" || flag_val == "clear all") {
-                                $('#subject').val('');
-                            }
-                            else if (flag_val == "Cleare body" || flag_val == "clear body" || flag_val == "clear" || flag_val == "clear all") {
-                                $('#mycontent').val('');
-                            }
-                            else if (flag_val == "Logout" || flag_val == "log out" || flag_val == "logout") {
-                                responsiveVoice.speak("Plase wait a moment");
-                                window.location.href = "/login/";
-                            }
-                            else {
-                                if (flag_to == 1) {
-                                    if (event.results[i].isFinal) {
-                                        $('#txt_to').val($('#txt_to').val() + ' ' + event.results[i][0].transcript);
-                                    } else {
-                                        $('#txt_to').val($('#txt_to').val() + ' ' + event.results[i][0].transcript);
-                                    }
-                                }
-                                else if (flag_sub == 1) {
-                                    if (event.results[i].isFinal) {
-                                        // $('#subject').val() += event.results[i][0].transcript;
-                                        $('#subject').val($('#subject').val() + ' ' + event.results[i][0].transcript);
-                                    } else {
-                                        $('#subject').val($('#subject').val() + ' ' + event.results[i][0].transcript);
-                                    }
-                                }
-                                else {
-                                    if (event.results[i].isFinal) {
-                                        transcription.textContent += event.results[i][0].transcript;
-                                    } else {
-                                        transcription.textContent += event.results[i][0].transcript;
-                                    }
-                                }
-                            }
-                        }
-                    };
-                    // Listen for errors
-                    recognizer.onerror = function (event) {
-                        // log.innerHTML = 'Recognition error: ' + event.message + '<br />' + log.innerHTML;
-                    };
-           
-                   // document.getElementById('button-play-ws').addEventListener('click', function () {
-                        // Set if we need interim results
-                        recognizer.interimResults = false;
-                        try {
-                            recognizer.start();
-                            // log.innerHTML = 'Recognition started' + '<br />' + log.innerHTML;
-                        } catch (ex) {
-                            //log.innerHTML = 'Recognition error: ' + ex.message + '<br />' + log.innerHTML;
-                        }
-                    //});
-                    document.getElementById('button-stop-ws').addEventListener('click', function () {
-                        recognizer.stop();
-                        //log.innerHTML = 'Recognition stopped' + '<br />' + log.innerHTML;
-                    });
-                    document.getElementById('clear-all').addEventListener('click', function () {
-                        transcription.textContent = '';
-                        //log.textContent = '';
-                    });
+                    appendText(spokenText);
                 }
-                function send_btn_onclick() {
-           
-                }
-           
-               </script>
-                      
-    </section>
-{% endblock %}    
-        
+            }
+        };
+
+        try { recognizer.start(); } catch (ex) { console.log(ex); }
+    });
+</script>
+{% endblock %}
+
+{% block speech_script %}
+speak("Feedback page loaded. Say subject, feedback, send, clear, or dashboard.");
+{% endblock %}

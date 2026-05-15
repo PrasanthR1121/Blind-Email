@@ -1,0 +1,27 @@
+
+    /* Fix the white inputs from your screenshot */
+    .form-control {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(0, 217, 255, 0.2) !important;
+        color: white !important; /* Makes text visible! */
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    /* The Toast Animation (Why logout feels better) */
+    .toast-card {
+        background: rgba(10, 20, 45, 0.95) !important;
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--neon-blue) !important;
+        border-radius: 15px;
+        animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(120%); }
+        to { transform: translateX(0); }
+    }
