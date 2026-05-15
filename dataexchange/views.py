@@ -484,7 +484,12 @@ def search(request):
     else:
         messages.info(request, f"No messages found matching '{keyword}'.")
 
-    return render(request, "search.html", {"data3": results, "keyword": keyword})
+    return render(request, "search.html", {
+        "data3": results,
+        "keyword": keyword,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 # ─────────────────────────────────────────────
@@ -706,7 +711,11 @@ def changeimage(request):
             messages.error(request, "No image selected. Please choose a file.")
         return redirect("/profile/")
 
-    return render(request, "changeimage.html", {"data": user})
+    return render(request, "changeimage.html", {
+        "data": user,
+        "role": "User",
+        "name": user.name,
+    })
 
 
 # ─────────────────────────────────────────────
