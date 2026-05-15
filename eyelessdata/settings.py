@@ -42,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dataexchange.middleware.NoStoreMiddleware',
 ]
 
 ROOT_URLCONF = 'eyelessdata.urls'
@@ -112,3 +113,6 @@ MEDIA_ROOT = BASE_DIR / "dataexchange" / "static" / "media"
 MEDIA_URL='/media/'
 
 LOGIN_URL = 'login'
+SESSION_COOKIE_AGE = 86400
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True

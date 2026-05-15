@@ -7,6 +7,12 @@ from .models import Registration, Message, Feedback
 
 import datetime
 
+SESSION_AGE_SECONDS = 60 * 60 * 24
+STATUS_PENDING = "pending"
+STATUS_ACTIVE = "active"
+STATUS_BLOCKED = "blocked"
+LOGIN_ALLOWED_STATUSES = {STATUS_ACTIVE, "approved"}
+
 
 # ─────────────────────────────────────────────
 # HELPER: clears stale messages from previous page
@@ -15,6 +21,49 @@ def _clear_messages(request):
     storage = messages.get_messages(request)
     for _ in storage:
         pass
+
+
+def _start_session(request, username):
+    request.session['username'] = username
+    request.session.set_expiry(SESSION_AGE_SECONDS)
+    request.session.modified = True
+
+
+def _normalize_status(status):
+    status = (status or STATUS_PENDING).lower()
+    if status == "approved":
+        return STATUS_ACTIVE
+    if status in {"blocked", "cancelled", "canceled", "rejected"}:
+        return STATUS_BLOCKED
+    if status == STATUS_ACTIVE:
+        return STATUS_ACTIVE
+    return STATUS_PENDING
+
+
+def _current_registration(request):
+    username = request.session.get('username')
+    if not username:
+        return None
+
+    user = Registration.objects.filter(email_id=username).first()
+    if not user:
+        request.session.flush()
+        return None
+
+    normalized_status = _normalize_status(user.status)
+    if normalized_status != user.status:
+        user.status = normalized_status
+        user.save(update_fields=['status'])
+
+    if user.status != STATUS_ACTIVE:
+        request.session.flush()
+        return None
+
+    return user
+
+
+def _is_admin(request):
+    return request.user.is_authenticated and request.user.is_superuser
 
 
 # ─────────────────────────────────────────────
@@ -45,8 +94,7 @@ def login(request):
 
         if admin_user is not None and admin_user.is_superuser:
             auth_login(request, admin_user)
-            request.session['username'] = admin_user.username
-            request.session.modified = True
+            _start_session(request, admin_user.username)
             messages.success(
                 request,
                 f"Welcome, Admin {admin_user.username}. Redirecting to your dashboard."
@@ -60,9 +108,16 @@ def login(request):
         # 2. Try Registration model user
         try:
             user = Registration.objects.get(email_id=identifier, password=password)
-            if user.status == "approved":
-                request.session['username'] = user.email_id
-                request.session.modified = True
+            normalized_status = _normalize_status(user.status)
+            if normalized_status != user.status:
+                user.status = normalized_status
+                user.save(update_fields=['status'])
+
+            if user.status in LOGIN_ALLOWED_STATUSES:
+                if user.status != STATUS_ACTIVE:
+                    user.status = STATUS_ACTIVE
+                    user.save(update_fields=['status'])
+                _start_session(request, user.email_id)
                 messages.success(
                     request,
                     f"Welcome back, {user.name}. Redirecting to your dashboard."
@@ -112,6 +167,8 @@ def reg(request):
     if request.method == "POST":
         email  = request.POST.get('email', '').strip()
         mobile = request.POST.get('mobile', '').strip()
+        password = request.POST.get('password', '')
+        cpassword = request.POST.get('cpassword', '')
 
         if Registration.objects.filter(email_id=email).exists():
             messages.error(request, "Error. This email address is already registered.")
@@ -121,19 +178,26 @@ def reg(request):
             messages.error(request, "Error. This mobile number is already registered.")
             return redirect('reg')
 
+        if password != cpassword:
+            messages.error(request, "Error. Password and confirm password do not match.")
+            return redirect('reg')
+
         try:
-            user = Registration.objects.create(
+            user_data = dict(
                 name     = request.POST.get('name'),
                 address  = request.POST.get('address'),
                 dob      = request.POST.get('dob'),
                 gender   = request.POST.get('gender'),
                 email_id = email,
                 mobile   = mobile,
-                password = request.POST.get('password'),
+                password = password,
                 answer   = request.POST.get('answer'),
-                image    = request.FILES.get('img'),
-                status   = 'pending'
+                status   = STATUS_PENDING
             )
+            if request.FILES.get('img'):
+                user_data['image'] = request.FILES['img']
+
+            user = Registration.objects.create(**user_data)
             messages.success(
                 request,
                 f"{user.name}, your account has been created successfully. "
@@ -249,7 +313,10 @@ def dashboard(request):
             "feed":   Feedback.objects.order_by('-id')[:3],
         }
     else:
-        user_obj = Registration.objects.get(email_id=user_email)
+        user_obj = _current_registration(request)
+        if not user_obj:
+            messages.warning(request, "Your session has expired or your account is not active. Please log in again.")
+            return redirect('login')
         inbox_count = Message.objects.filter(receiver=user_obj, status="sent").count()
         sent_count  = Message.objects.filter(sender=user_obj, status="sent").count()
         recent      = Message.objects.filter(receiver=user_obj).order_by('-id')[:5]
@@ -278,17 +345,16 @@ def inbox(request):
     - Empty:    "Your inbox is empty. No new messages."
     - Has mail: "You have <N> messages in your inbox. Use Tab to navigate each message."
     """
-    if not request.session.get('username'):
-        return redirect("/login/")
-
     _clear_messages(request)
     try:
-        if request.user.is_authenticated and request.user.is_superuser:
+        if _is_admin(request):
             user_name = request.user.username
             role = "Admin"
             msgs = Message.objects.filter(status="sent").order_by("-id")
         else:
-            user_obj = Registration.objects.get(email_id=request.session['username'])
+            user_obj = _current_registration(request)
+            if not user_obj:
+                return redirect("/login/")
             user_name = user_obj.name
             role = "User"
             msgs = Message.objects.filter(receiver=user_obj, status="sent").order_by("-id")
@@ -325,10 +391,9 @@ def message(request):
     - Recipient not found: "Recipient not found. Please check the email address and try again."
     - Sent:                "Your message with subject <subject> has been sent successfully."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         receiver_email = request.POST.get("sendto", "").strip()
@@ -370,10 +435,9 @@ def save(request):
     Saves a draft.
     Voice cue: "Your message has been saved as a draft."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         receiver_email = request.POST.get("sendto", "").strip()
@@ -404,7 +468,8 @@ def compose(request):
     Voice cue spoken by template on load:
     "Reading message from <sender>. Subject: <subject>. Press R to reply."
     """
-    if not request.session.get('username'):
+    current_user = _current_registration(request)
+    if not current_user:
         return redirect("/login/")
 
     msg_id  = request.GET.get("count")
@@ -415,7 +480,6 @@ def compose(request):
         return redirect("/inbox/")
 
     request.session['reply_to'] = msg_obj.sender.email_id
-    current_user = Registration.objects.get(email_id=request.session['username'])
 
     return render(request, "compose.html", {
         "frm1":    msg_obj.sender.email_id,
@@ -432,10 +496,10 @@ def message1(request):
     Reply form submission.
     Voice cue: "Reply sent successfully."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
-    user  = Registration.objects.get(email_id=request.session['username'])
     users = Registration.objects.all()
 
     if request.method == "POST":
@@ -470,11 +534,11 @@ def search(request):
     - Results found: "<N> messages found matching '<keyword>'."
     - No results:    "No messages found matching '<keyword>'."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
     keyword = request.POST.get("se", "").strip()
-    user    = Registration.objects.get(email_id=request.session['username'])
 
     results = Message.objects.filter(receiver=user, content__icontains=keyword)
     count   = results.count()
@@ -502,11 +566,11 @@ def sent(request):
     - Empty:    "Your sent folder is empty."
     - Has mail: "You have <N> sent messages."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
     _clear_messages(request)
-    user      = Registration.objects.get(email_id=request.session['username'])
     sent_msgs = Message.objects.filter(sender=user, status="sent").order_by("-id")
     count     = sent_msgs.count()
 
@@ -532,11 +596,11 @@ def draft(request):
     - Empty:    "You have no saved drafts."
     - Has drafts: "You have <N> saved draft messages."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
     _clear_messages(request)
-    user   = Registration.objects.get(email_id=request.session['username'])
     drafts = Message.objects.filter(sender=user, status="draft").order_by("-id")
     count  = drafts.count()
 
@@ -554,7 +618,8 @@ def draft(request):
 
 def draft1(request):
     """Opens a draft for editing."""
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
     msg_id  = request.GET.get("count")
@@ -571,7 +636,7 @@ def draft1(request):
         "sub":  msg_obj.subject,
         "con":  msg_obj.content,
         "role": "User",
-        "name": Registration.objects.get(email_id=request.session['username']).name,
+        "name": user.name,
     })
 
 
@@ -580,10 +645,9 @@ def draft2(request):
     Sends a draft as a real email.
     Voice cue: "Your draft has been sent successfully."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         receiver_email = request.POST.get("sendto", "").strip()
@@ -627,13 +691,14 @@ def userview(request):
     Voice cues:
     - Status updated: "User status has been updated to <status>."
     """
-    if not request.session.get('username'):
+    if not _is_admin(request):
+        messages.error(request, "Admin access required.")
         return redirect("/login/")
 
     user_id = request.GET.get("id")
-    status  = request.GET.get("status")
+    status  = _normalize_status(request.GET.get("status"))
 
-    if user_id and status:
+    if user_id and request.GET.get("status"):
         Registration.objects.filter(id=user_id).update(status=status)
         messages.success(request, f"User status has been updated to {status}.")
 
@@ -654,10 +719,10 @@ def profile(request):
     Voice cue (spoken by template):
     "Viewing your profile. Name: <name>. Email: <email>."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
 
-    user = Registration.objects.get(email_id=request.session['username'])
     return render(request, "profile.html", {
         "data": user,
         "role": "User",
@@ -670,10 +735,9 @@ def editprofile(request):
     Voice cues:
     - Success: "Your profile has been updated successfully."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         user.name    = request.POST.get("name")
@@ -697,10 +761,9 @@ def changeimage(request):
     - Success: "Your profile photo has been updated."
     - No file: "No image selected. Please choose a file."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         if request.FILES.get('img'):
@@ -727,10 +790,9 @@ def feedback(request):
     Voice cues:
     - Success: "Thank you. Your feedback has been submitted successfully."
     """
-    if not request.session.get('username'):
+    user = _current_registration(request)
+    if not user:
         return redirect("/login/")
-
-    user = Registration.objects.get(email_id=request.session['username'])
 
     if request.method == "POST":
         Feedback.objects.create(
@@ -752,7 +814,8 @@ def viewfeedback(request):
     Voice cue (spoken by template):
     "Viewing all feedback. <N> items found."
     """
-    if not request.session.get('username'):
+    if not _is_admin(request):
+        messages.error(request, "Admin access required.")
         return redirect("/login/")
 
     _clear_messages(request)
@@ -808,11 +871,10 @@ def adminhome(request):
 @never_cache
 @login_required(login_url='login')
 def userhome(request):
-    email = request.session.get('username')
-    if not email:
+    user_obj = _current_registration(request)
+    if not user_obj:
         return redirect('login')
 
-    user_obj    = Registration.objects.get(email_id=email)
     inbox_count = Message.objects.filter(receiver=user_obj, status="sent").count()
     sent_count  = Message.objects.filter(sender=user_obj, status="sent").count()
     recent      = Message.objects.filter(receiver=user_obj).order_by('-id')[:5]
